@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Cube Companion - Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1 class="hero-title">Cube Companion</h1>
+    <p class="hero-subtitle">Your personal Magic: The Gathering cube manager</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login</a>
+    </div>
+</div>
+{% endblock %}

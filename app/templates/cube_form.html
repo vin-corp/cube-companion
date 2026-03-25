@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{% if cube %}Edit Cube{% else %}New Cube{% endif %} - Cube Companion{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2 class="form-title">{% if cube %}Edit Cube{% else %}New Cube{% endif %}</h2>
+    <p class="form-subtitle">{% if cube %}Update your cube's details{% else %}Create a new cube{% endif %}</p>
+    <form method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="name">Cube Name</label>
+            <input id="name" name="name" type="text" placeholder="e.g. Vintage Cube" value="{{ cube.name if cube else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description <span class="label-optional">(optional)</span></label>
+            <textarea id="description" name="description" placeholder="Describe your cube...">{{ cube.description if cube else '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">{% if cube %}Save Changes{% else %}Create Cube{% endif %}</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-full">Cancel</a>
+    </form>
+</div>
+{% endblock %}
