@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Cube Companion{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>Welcome, {{ user.username }}!</h1>
+        <p class="dashboard-subtitle">{{ cubes|length }} cube{{ 's' if cubes|length != 1 else '' }}</p>
+    </div>
+    <a href="{{ url_for('main.create_cube') }}" class="btn btn-primary">+ New Cube</a>
+</div>
+
+{% if cubes %}
+<div class="cube-list">
+    {% for cube in cubes %}
+    <div class="cube-card">
+        <div class="cube-card-body">
+            <h3 class="cube-name">{{ cube.name }}</h3>
+            {% if cube.description %}
+            <p class="cube-description">{{ cube.description }}</p>
+            {% endif %}
+            <p class="cube-meta">Created {{ cube.created_at.strftime('%b %d, %Y') }}</p>
+        </div>
+        <div class="cube-card-actions">
+            <a href="{{ url_for('main.edit_cube', cube_id=cube.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+            <form method="POST" action="{{ url_for('main.delete_cube', cube_id=cube.id) }}" onsubmit="return confirm('Delete \'{{ cube.name }}\'?')">
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>You don't have any cubes yet.</p>
+    <a href="{{ url_for('main.create_cube') }}" class="btn btn-primary">Create your first cube</a>
+</div>
+{% endif %}
+{% endblock %}

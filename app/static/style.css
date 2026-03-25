@@ -1,0 +1,318 @@
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0d0f14;
+    color: #e6e6e6;
+    min-height: 100vh;
+}
+
+a { color: #ffd700; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Navbar ── */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 32px;
+    background-color: #12151d;
+    border-bottom: 1px solid #2a2f3d;
+}
+
+.nav-brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 0.95rem;
+}
+
+.nav-links a {
+    color: #b0b8c1;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover { color: #ffd700; text-decoration: none; }
+
+.nav-user {
+    color: #ffd700;
+    font-weight: 600;
+}
+
+/* ── Main Content ── */
+.main-content {
+    padding: 40px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ── Hero ── */
+.hero {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 16px;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: #b0b8c1;
+    margin-bottom: 40px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    text-decoration: none;
+}
+
+.btn:hover { opacity: 0.88; transform: translateY(-1px); text-decoration: none; }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    background-color: #ffd700;
+    color: #0d0f14;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #ffd700;
+    border: 2px solid #ffd700;
+}
+
+.btn-full { width: 100%; text-align: center; }
+
+/* ── Auth Forms ── */
+.form-container {
+    max-width: 420px;
+    margin: 60px auto;
+    background: #1a1f2b;
+    border-radius: 14px;
+    padding: 40px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.form-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 6px;
+}
+
+.form-subtitle {
+    color: #8fa1b3;
+    margin-bottom: 28px;
+    font-size: 0.95rem;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 18px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.form-group label {
+    font-size: 0.9rem;
+    color: #b0b8c1;
+    font-weight: 500;
+}
+
+.form-group input {
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #e6e6e6;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.form-group input:focus { border-color: #ffd700; }
+.form-group input::placeholder { color: #4a5568; }
+
+.form-footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #8fa1b3;
+}
+
+/* ── Textarea ── */
+.form-group textarea {
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #e6e6e6;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.form-group textarea:focus { border-color: #ffd700; }
+.form-group textarea::placeholder { color: #4a5568; }
+
+.label-optional { color: #4a5568; font-size: 0.82rem; }
+
+/* ── Dashboard ── */
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    color: #ffd700;
+    margin-bottom: 4px;
+}
+
+.dashboard-subtitle { color: #8fa1b3; }
+
+/* ── Cube List ── */
+.cube-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cube-card {
+    background: #1a1f2b;
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    flex-wrap: wrap;
+}
+
+.cube-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #e6e6e6;
+    margin-bottom: 4px;
+}
+
+.cube-description {
+    color: #8fa1b3;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.cube-meta {
+    font-size: 0.8rem;
+    color: #4a5568;
+}
+
+.cube-card-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ── Button sizes ── */
+.btn-sm {
+    padding: 7px 16px;
+    font-size: 0.88rem;
+}
+
+.btn-danger {
+    background-color: #c0392b;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover { opacity: 0.88; }
+
+/* ── Empty State ── */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8fa1b3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    font-size: 1rem;
+}
+
+/* ── Card Grid ── */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #1a1f2b;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+}
+
+.card img { width: 100%; display: block; }
+
+.card-content { padding: 15px; }
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.card-mana { color: #ffd700; margin-bottom: 8px; }
+
+.card-type {
+    font-size: 0.9rem;
+    color: #b0b8c1;
+    margin-bottom: 10px;
+}
+
+.card-text { font-size: 0.9rem; line-height: 1.4; }
+
+.card-footer {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #8fa1b3;
+}
