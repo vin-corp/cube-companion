@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, abort
 from flask_login import login_required, current_user
 from .models import Cube
 from .extensions import db
+import requests as scryfall_requests
 
 main = Blueprint("main", __name__)
 
@@ -58,3 +59,31 @@ def delete_cube(cube_id):
     db.session.delete(cube)
     db.session.commit()
     return redirect(url_for("main.dashboard"))
+
+@main.route("/cube/<int:cube_id>/search", methods=["GET", "POST"])
+@login_required
+def search_cards(cube_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        abort(403)
+
+    cards = []
+    query = ""
+    error = None
+
+    if request.method == "POST":
+        query = request.form.get("query", "").strip()
+        if query:
+            try:
+                response = scryfall_requests.get(
+                    "https://api.scryfall.com/cards/search",
+                    params={"q": query}
+                )
+                if response.status_code == 200:
+                    cards = response.json().get("data", [])
+                else:
+                    error = "No cards found. Try a different search."
+            except Exception:
+                error = "Could not connect to Scryfall. Try again."
+
+    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error)

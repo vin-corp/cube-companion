@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Search Cards - {{ cube.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>Search Cards</h1>
+        <p class="dashboard-subtitle">Adding to: {{ cube.name }}</p>
+    </div>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+
+<form method="POST" class="auth-form">
+    <div class="form-group">
+        <input type="text" name="query" value="{{ query }}" placeholder="Search for a card..." autofocus>
+    </div>
+    <button type="submit" class="btn btn-primary btn-full">Search</button>
+</form>
+
+{% if error %}
+<p class="dashboard-subtitle">{{ error }}</p>
+{% endif %}
+
+{% if cards %}
+<div class="card-container">
+    {% for card in cards %}
+    <div class="card">
+        {% if card.image_uris %}
+        <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
+        {% endif %}
+        <div class="card-content">
+            <div class="card-title">{{ card.name }}</div>
+            {% if card.mana_cost %}
+            <div class="card-mana">{{ card.mana_cost }}</div>
+            {% endif %}
+            <div class="card-type">{{ card.type_line }}</div>
+            {% if card.oracle_text %}
+            <div class="card-text">{{ card.oracle_text }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
