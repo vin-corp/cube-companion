@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort
+from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify
 from flask_login import login_required, current_user
 from .models import Cube, Card
 from .extensions import db
@@ -87,3 +87,33 @@ def search_cards(cube_id):
                 error = "Could not connect to Scryfall. Try again."
 
     return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error)
+
+@main.route('/cube/<int:cube_id>/add', methods=['POST'])
+@login_required
+def add_to_cube(cube_id):
+    cube = Cube.query.get_or_404(cube_id)
+    
+    if cube.owner != current_user:
+        return jsonify({"error": "Unauthorized to edit this cube"}), 403
+
+    data = request.get_json()
+
+    new_card = Card(
+        name=data.get('name'),
+        scryfall_id=data.get('scryfall_id'),
+        image_url=data.get('image_url'),
+        mana_cost=data.get('mana_cost'),
+        type_line=data.get('type_line'),
+        text_box=data.get('text_box'),
+        cube_id=cube.id
+    )
+    
+    db.session.add(new_card)
+    db.session.commit()
+    
+    print(f">>> {new_card.name} added to {cube.name}")
+    
+    return jsonify({
+        "success": True,
+        "message": f"Added {new_card.name} to {cube.name}!"
+    }), 200
