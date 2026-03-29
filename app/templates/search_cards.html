@@ -91,10 +91,11 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('Success:', data);
-                    // Optional: Show a little "Card Added!" toast or alert here
+                    showToast(`${selectedCardData.name} was added to your cube!`);
                 })
                 .catch((error) => {
                     console.error('Error:', error);
+                    showToast("Error adding card to cube.");
                 });
                 
             } else if (!e.target.closest('.card')) {
@@ -103,6 +104,16 @@
             }
         });
     });
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-success';
+        toast.innerText = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 4000);
+    }
 </script>
 
 {% endblock %}
