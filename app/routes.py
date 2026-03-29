@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort
 from flask_login import login_required, current_user
-from .models import Cube
+from .models import Cube, Card
 from .extensions import db
 import requests as scryfall_requests
 

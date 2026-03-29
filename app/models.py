@@ -22,3 +22,14 @@ class Cube(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    scryfall_id = db.Column(db.String(100))
+    image_url = db.Column(db.String(500))
+    mana_cost = db.Column(db.String(100))
+    type_line = db.Column(db.String(200))
+    text_box = db.Column(db.String(1000))
+    
+    cube_id = db.Column(db.Integer, db.ForeignKey("cube.id"), nullable=False)
