@@ -15,8 +15,8 @@
 
 {% if cards %}
 <div class="card-container">
-    {% for card in cube.cards %}
-    <div class="card">
+    {% for card in cards %}
+    <div class="card" data-card-id="{{ card.id }}" data-name="{{ card.name }}">
         {% if card.image_url %}
         <img src="{{ card.image_url }}" alt="{{ card.name }}">
         {% endif %}
@@ -42,5 +42,65 @@
     <p class="dashboard-subtitle">There are no cards in this cube yet. Time to get drafting!</p>
 </div>
 {% endif %}
+
+<button type="button" id="floatingRemoveBtn" class="card-action-button">Remove Card</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.card');
+        const floatingBtn = document.getElementById('floatingRemoveBtn');
+        
+        let selectedCardId = null;
+        let selectedCardName = null;
+        let clickedCardElement = null;
+
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                
+                selectedCardId = card.dataset.cardId;
+                selectedCardName = card.dataset.name;
+                clickedCardElement = card;
+
+                floatingBtn.style.left = e.pageX + 'px';
+                floatingBtn.style.top = e.pageY + 'px';
+                floatingBtn.style.display = 'block';
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target === floatingBtn) {
+                floatingBtn.style.display = 'none';
+                
+                fetch(`/cube/{{ cube.id }}/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ card_id: selectedCardId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Success:', data);
+                        showToast(`${selectedCardName} was removed from the cube.`);
+                        clickedCardElement.remove();
+                    } else {
+                        showToast(data.error || "Error removing card.");
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showToast("Error removing card from cube.");
+                });
+                
+            } else if (!e.target.closest('.card')) {
+                floatingBtn.style.display = 'none';
+                selectedCardId = null;
+                clickedCardElement = null;
+            }
+        });
+    });
+</script>
 
 {% endblock %}
