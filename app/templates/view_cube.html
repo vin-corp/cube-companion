@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}View Cube - {{ cube.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>{{ cube.name }}</h1>
+        <p class="dashboard-subtitle">{{ cube.description or 'No description provided.' }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+{% if cards %}
+<div class="card-container">
+    {% for card in cube.cards %}
+    <div class="card">
+        {% if card.image_url %}
+        <img src="{{ card.image_url }}" alt="{{ card.name }}">
+        {% endif %}
+        
+        <div class="card-content">
+            <div class="card-title">{{ card.name }}</div>
+            
+            {% if card.mana_cost %}
+            <div class="card-mana">{{ card.mana_cost }}</div>
+            {% endif %}
+            
+            <div class="card-type">{{ card.type_line }}</div>
+            
+            {% if card.text_box %}
+            <div class="card-text">{{ card.text_box }}</div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="dashboard-header">
+    <p class="dashboard-subtitle">There are no cards in this cube yet. Time to get drafting!</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -117,3 +117,13 @@ def add_to_cube(cube_id):
         "success": True,
         "message": f"Added {new_card.name} to {cube.name}!"
     }), 200
+
+    from flask import render_template
+
+@main.route('/cube/<int:cube_id>/view', methods=['GET'])
+def view_cube(cube_id):
+    cube = Cube.query.get_or_404(cube_id)
+    
+    cards = Card.query.filter_by(cube_id=cube_id).all()
+    
+    return render_template('view_cube.html', cube=cube, cards=cards)
