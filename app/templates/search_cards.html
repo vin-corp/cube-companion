@@ -24,7 +24,13 @@
 {% if cards %}
 <div class="card-container">
     {% for card in cards %}
-    <div class="card">
+    <div class="card" 
+         data-name="{{ card.name }}"
+         data-scryfall-id="{{ card.id }}"
+         data-image-url="{{ card.image_uris.normal if card.image_uris else '' }}"
+         data-mana-cost="{{ card.mana_cost or '' }}"
+         data-type-line="{{ card.type_line or '' }}"
+         data-text-box="{{ card.oracle_text or '' }}">
         {% if card.image_uris %}
         <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
         {% endif %}
@@ -42,4 +48,63 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<button type="button" id="floatingAddBtn" class="card-action-button">Add to Cube</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.card');
+        const floatingBtn = document.getElementById('floatingAddBtn');
+        
+        let selectedCardData = null;
+
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                
+                selectedCardData = {
+                    name: card.dataset.name,
+                    scryfall_id: card.dataset.scryfallId,
+                    image_url: card.dataset.imageUrl,
+                    mana_cost: card.dataset.manaCost,
+                    type_line: card.dataset.typeLine,
+                    text_box: card.dataset.textBox
+                };
+
+                floatingBtn.style.left = e.pageX + 'px';
+                floatingBtn.style.top = e.pageY + 'px';
+                floatingBtn.style.display = 'block';
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target === floatingBtn) {
+                floatingBtn.style.display = 'none';
+                
+                fetch(`/cube/{{ cube.id }}/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(selectedCardData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    showToast(`${selectedCardData.name} was added to your cube!`);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    showToast("Error adding card to cube.");
+                });
+                
+            } else if (!e.target.closest('.card')) {
+                floatingBtn.style.display = 'none';
+                selectedCardData = null;
+            }
+        });
+    });
+
+</script>
+
 {% endblock %}
