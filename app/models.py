@@ -1,3 +1,4 @@
+import uuid
 from .extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,6 +9,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     cubes = db.relationship("Cube", backref="owner", lazy=True, cascade="all, delete-orphan")
+    custom_cards = db.relationship("CustomCard", backref="creator", lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -34,3 +36,17 @@ class Card(db.Model):
     text_box = db.Column(db.String(1000))
     
     cube_id = db.Column(db.Integer, db.ForeignKey("cube.id"), nullable=False)
+    custom_card_id = db.Column(db.Integer, db.ForeignKey("custom_card.id"), nullable=True)
+    custom_card = db.relationship('CustomCard')
+
+class CustomCard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    local_image_path = db.Column(db.String(500))
+    mana_cost = db.Column(db.String(100))
+    type_line = db.Column(db.String(200))
+    text_box = db.Column(db.String(1000))
+    
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    share_id = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
