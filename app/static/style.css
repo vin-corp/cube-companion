@@ -355,6 +355,24 @@ a:hover { text-decoration: underline; }
     animation: toastFade 4s ease-in-out forwards;
 }
 
+.toast-failure {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    
+    background-color: rgba(50, 0, 0, 0.85); 
+    border: 2px solid #af4c4c;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    pointer-events: none;
+    animation: toastFade 4s ease-in-out forwards;
+}
+
 @keyframes toastFade {
     0% { opacity: 0; }
     12.5% { opacity: 1; }

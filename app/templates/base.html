@@ -26,9 +26,9 @@
     </main>
 
     <script>
-        function showToast(message) {
+        function showToast(message, status) {
             const toast = document.createElement('div');
-            toast.className = 'toast-success';
+            toast.className = status === 'success' ? 'toast-success' : 'toast-failure';
             toast.innerText = message;
             document.body.appendChild(toast);
             setTimeout(() => {
