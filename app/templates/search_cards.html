@@ -31,8 +31,10 @@
          data-mana-cost="{{ card.mana_cost or '' }}"
          data-type-line="{{ card.type_line or '' }}"
          data-text-box="{{ card.oracle_text or '' }}">
-        {% if card.image_uris %}
-        <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
+        {% if card.image_uris and card.image_uris.normal %}
+            <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
+        {% else %}
+            <div class="no-image">No Image Available</div>
         {% endif %}
         <div class="card-content">
             <div class="card-title">{{ card.name }}</div>
@@ -43,6 +45,9 @@
             {% if card.oracle_text %}
             <div class="card-text">{{ card.oracle_text }}</div>
             {% endif %}
+            <button type="button" class="btn-add-card">
+                Add to Cube
+            </button>
         </div>
     </div>
     {% endfor %}
@@ -107,4 +112,51 @@
 
 </script>
 
+<script>
+// helper to turn {W}{U} into icons
+function formatMana(manaStr) {
+    if (!manaStr) return "";
+    return manaStr.replace(/{(.*?)}/g, (match, symbol) => {
+        const s = symbol.replace("/", "").toUpperCase(); 
+        return `<img src="https://svgs.scryfall.io/card-symbols/${s}.svg" class="mana-symbol" alt="${s}">`;
+    });
+}
+
+// The function for Flask route
+function addToCube(name, scryfallId, imageUrl, manaCost, typeLine) {
+    const data = {
+        name: name,
+        scryfall_id: scryfallId,
+        image_url: imageUrl,
+        mana_cost: manaCost,
+        type_line: typeLine
+    };
+
+    fetch(`/cube/{{ cube.id }}/add`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert(result.message);
+        } else {
+            alert("Error: " + result.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Apply the mana icons to the page
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.card-mana').forEach(el => {
+        el.innerHTML = formatMana(el.innerText);
+    });
+});
+</script>
+
 {% endblock %}
+
