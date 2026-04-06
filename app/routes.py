@@ -151,6 +151,6 @@ def remove_from_cube(cube_id):
 """
 @app.route('/share/card/<share_id>')
 def shared_card(share_id):
-    card = CustomCard.query.filter_by(share_id=share_id, is_public=True).first_or_404()
+    card = CustomCard.query.filter_by(share_id=uuid).first_or_404()
     return render_template('shared_card.html', card=card)
 """

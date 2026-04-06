@@ -33,6 +33,8 @@ class Card(db.Model):
     image_url = db.Column(db.String(500))
     mana_cost = db.Column(db.String(100))
     type_line = db.Column(db.String(200))
+    power = db.Column(db.String(10))
+    toughness = db.Column(db.String(10))
     text_box = db.Column(db.String(1000))
     
     cube_id = db.Column(db.Integer, db.ForeignKey("cube.id"), nullable=False)
@@ -45,8 +47,10 @@ class CustomCard(db.Model):
     local_image_path = db.Column(db.String(500))
     mana_cost = db.Column(db.String(100))
     type_line = db.Column(db.String(200))
+    power = db.Column(db.String(10))
+    toughness = db.Column(db.String(10))
     text_box = db.Column(db.String(1000))
     
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
-    share_id = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
+    uuid = db.Column(db.String(36), unique=True, default=lambda: str(uuid.uuid4()))
