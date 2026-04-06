@@ -97,17 +97,21 @@ def add_to_cube(cube_id):
         return jsonify({"error": "Unauthorized to edit this cube"}), 403
 
     data = request.get_json()
+    raw_text = data.get('text_box', '')
+    safe_text = raw_text.replace('\u2212', '-')
+    
+    safe_name = data.get('name', '').replace('\u2212', '-')
 
     new_card = Card(
-        name=data.get('name'),
+        name=safe_name,               
         scryfall_id=data.get('scryfall_id'),
         image_url=data.get('image_url'),
         mana_cost=data.get('mana_cost'),
         type_line=data.get('type_line'),
-        text_box=data.get('text_box'),
-        cube_id=cube.id
+        text_box=safe_text,            
+        cube_id=cube_id
     )
-    
+
     db.session.add(new_card)
     db.session.commit()
     

@@ -57,58 +57,97 @@
 <button type="button" id="floatingAddBtn" class="card-action-button">Add to Cube</button>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cards = document.querySelectorAll('.card');
-        const floatingBtn = document.getElementById('floatingAddBtn');
-        
-        let selectedCardData = null;
+document.addEventListener('DOMContentLoaded', () => {
+    const cardContainer = document.querySelector('.card-container');
+    const floatingBtn = document.getElementById('floatingAddBtn');
+    let selectedCardData = null;
 
-        cards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                
-                selectedCardData = {
-                    name: card.dataset.name,
-                    scryfall_id: card.dataset.scryfallId,
-                    image_url: card.dataset.imageUrl,
-                    mana_cost: card.dataset.manaCost,
-                    type_line: card.dataset.typeLine,
-                    text_box: card.dataset.textBox
-                };
+    if (cardContainer) {
+        cardContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.card');
+            if (!card) return;
 
-                floatingBtn.style.left = e.pageX + 'px';
-                floatingBtn.style.top = e.pageY + 'px';
-                floatingBtn.style.display = 'block';
-            });
-        });
+            const cardData = {
+                name: card.dataset.name,
+                scryfall_id: card.dataset.scryfallId,
+                image_url: card.dataset.imageUrl,
+                mana_cost: card.dataset.manaCost,
+                type_line: card.dataset.typeLine,
+                text_box: card.dataset.textBox
+            };
 
-        document.addEventListener('click', (e) => {
-            if (e.target === floatingBtn) {
+            const addButton = e.target.closest('.btn-add-card');
+            if (addButton) {
+                e.stopPropagation();
                 floatingBtn.style.display = 'none';
-                
-                fetch(`/cube/{{ cube.id }}/add`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(selectedCardData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
-                    showToast(`${selectedCardData.name} was added to your cube!`);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showToast("Error adding card to cube.");
-                });
-                
-            } else if (!e.target.closest('.card')) {
-                floatingBtn.style.display = 'none';
-                selectedCardData = null;
+                performAdd(cardData, addButton);
+                return;
             }
+
+            // If they click anywhere else on the card show floating button
+            selectedCardData = cardData;
+            floatingBtn.style.left = e.pageX + 'px';
+            floatingBtn.style.top = e.pageY + 'px';
+            floatingBtn.style.display = 'block';
+            e.stopPropagation();
         });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target !== floatingBtn) {
+            floatingBtn.style.display = 'none';
+        }
     });
+
+    // floating button click
+    floatingBtn.addEventListener('click', () => {
+        if (selectedCardData) {
+            performAdd(selectedCardData);
+            floatingBtn.style.display = 'none';
+        }
+    });
+
+    // Formatting mana icons on load
+    document.querySelectorAll('.card-mana').forEach(el => {
+        el.innerHTML = formatMana(el.innerText);
+    });
+});
+
+// Fetch logic shared by both click types
+function performAdd(cardData, buttonElement = null) {
+    const originalText = buttonElement ? buttonElement.innerText : null;
+    if (buttonElement) {
+        buttonElement.disabled = true;
+        buttonElement.innerText = "Adding...";
+    }
+
+    fetch(`/cube/{{ cube.id }}/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cardData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showToast(`${cardData.name} added!`);
+        if (buttonElement) {
+            buttonElement.innerText = "Added!";
+            buttonElement.style.backgroundColor = "#155724";
+            setTimeout(() => {
+                buttonElement.disabled = false;
+                buttonElement.innerText = originalText;
+                buttonElement.style.backgroundColor = "";
+            }, 2000);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showToast("Error adding card.");
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.innerText = originalText;
+        }
+    });
+}
 
 </script>
 
@@ -120,34 +159,6 @@ function formatMana(manaStr) {
         const s = symbol.replace("/", "").toUpperCase(); 
         return `<img src="https://svgs.scryfall.io/card-symbols/${s}.svg" class="mana-symbol" alt="${s}">`;
     });
-}
-
-// The function for Flask route
-function addToCube(name, scryfallId, imageUrl, manaCost, typeLine) {
-    const data = {
-        name: name,
-        scryfall_id: scryfallId,
-        image_url: imageUrl,
-        mana_cost: manaCost,
-        type_line: typeLine
-    };
-
-    fetch(`/cube/{{ cube.id }}/add`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert(result.message);
-        } else {
-            alert("Error: " + result.error);
-        }
-    })
-    .catch(error => console.error('Error:', error));
 }
 
 // Apply the mana icons to the page
