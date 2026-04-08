@@ -1,40 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Cube Companion{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <nav class="navbar">
-        <a class="nav-brand" href="{{ url_for('main.home') }}">Cube Companion</a>
-        <div class="nav-links">
-            {% if current_user.is_authenticated %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Cube Companion{% endblock %}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        <nav class="navbar">
+            <a class="nav-brand" href="{{ url_for('main.home') }}">Cube Companion</a>
+            <div class="nav-links">
+                {% if current_user.is_authenticated %}
                 <span class="nav-user">{{ current_user.username }}</span>
                 <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
-            {% else %}
+                {% else %}
                 <a href="{{ url_for('auth.login') }}">Login</a>
                 <a href="{{ url_for('auth.register') }}">Register</a>
-            {% endif %}
-        </div>
-    </nav>
+                {% endif %}
+            </div>
+        </nav>
 
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
 
-    <script>
-        function showToast(message, status) {
-            const toast = document.createElement('div');
-            toast.className = status === 'success' ? 'toast-success' : 'toast-failure';
-            toast.innerText = message;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.remove();
-            }, 4000);
-        }
-    </script>
-</body>
+        <script>
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast-success';
+                toast.innerText = message;
+                document.body.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 4000);
+            }
+        </script>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <script>
+            showToast("{{ message }}", "{{ 'fail' if category == 'error' else 'success' }}");
+        </script>
+        {% endfor %}
+        {% endwith %}
+    </body>
 </html>
