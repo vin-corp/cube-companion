@@ -309,7 +309,7 @@ a:hover { text-decoration: underline; }
     margin-bottom: 10px;
 }
 
-.card-text { font-size: 0.9rem; line-height: 1.4; }
+.card-text { font-size: 0.9rem; line-height: 1.4; white-space: pre-wrap; }
 
 .card-footer {
     margin-top: 10px;
