@@ -39,7 +39,7 @@
 </div>
 {% else %}
 <div class="dashboard-header">
-    <p class="dashboard-subtitle">There are no cards in this cube yet. Time to get drafting!</p>
+    <p class="dashboard-subtitle">There's no cards in the cubes yet--use the Add Cards button above to get started. Get drafting!!</p>
 </div>
 {% endif %}
 
@@ -83,15 +83,15 @@
                 .then(data => {
                     if (data.success) {
                         console.log('Success:', data);
-                        showToast(`${selectedCardName} was removed from the cube.`);
+                        showToast(`${selectedCardName} was removed from the cube.`, 'success');
                         clickedCardElement.remove();
                     } else {
-                        showToast(data.error || "Error removing card.");
+                        showToast(data.error || "Error removing card.", 'fail');
                     }
                 })
                 .catch((error) => {
                     console.error('Error:', error);
-                    showToast("Error removing card from cube.");
+                    showToast("Error removing card from cube.", 'fail');
                 });
                 
             } else if (!e.target.closest('.card')) {
