@@ -423,6 +423,17 @@ a:hover { text-decoration: underline; }
     animation: toastFade 4s ease-in-out forwards;
 }
 
+.toast-fail {
+    background-color: red;
+    color: white;
+    padding: 10px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    border-radius: 5px;
+    z-index: 9999;
+}
+
 @keyframes toastFade {
     0% { opacity: 0; }
     12.5% { opacity: 1; }

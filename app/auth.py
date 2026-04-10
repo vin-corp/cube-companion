@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, render_template
 from flask_login import login_user, logout_user, login_required
+from flask import flash
 from .models import User
 from .extensions import db, login_manager
 
@@ -15,6 +16,10 @@ def register():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash("Username already exists.", "error")
+            return redirect(url_for("auth.register"))
 
         user = User(username=username)
         user.set_password(password)
