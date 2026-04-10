@@ -87,7 +87,10 @@ def search_cards(cube_id):
             except Exception:
                 error = "Could not connect to Scryfall. Try again."
 
-    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error)
+    # Map scryfall_id -> db card id for cards already in this cube
+    existing = {c.scryfall_id: c.id for c in cube.cards if c.scryfall_id}
+
+    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error, existing=existing)
 
 @main.route('/cube/<int:cube_id>/add', methods=['POST'])
 @login_required
@@ -116,11 +119,10 @@ def add_to_cube(cube_id):
     db.session.add(new_card)
     db.session.commit()
     
-    print(f">>> {new_card.name} added to {cube.name}")
-    
     return jsonify({
         "success": True,
-        "message": f"Added {new_card.name} to {cube.name}!"
+        "message": f"Added {new_card.name} to {cube.name}!",
+        "card_id": new_card.id
     }), 200
 
 @main.route('/cube/<int:cube_id>/view', methods=['GET'])

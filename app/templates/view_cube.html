@@ -9,6 +9,7 @@
     </div>
     <div>
         <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
+        <button type="button" id="editCardsBtn" class="btn btn-secondary" onclick="toggleEditMode()">Edit Cards</button>
         <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>
@@ -20,87 +21,87 @@
         {% if card.image_url %}
         <img src="{{ card.image_url }}" alt="{{ card.name }}">
         {% endif %}
-        
+
         <div class="card-content">
             <div class="card-title">{{ card.name }}</div>
-            
+
             {% if card.mana_cost %}
             <div class="card-mana">{{ card.mana_cost }}</div>
             {% endif %}
-            
+
             <div class="card-type">{{ card.type_line }}</div>
-            
+
             {% if card.text_box %}
             <div class="card-text">{{ card.text_box }}</div>
             {% endif %}
+
+            <button type="button" class="btn-remove-card">Remove from Cube</button>
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="dashboard-header">
-    <p class="dashboard-subtitle">There's no cards in the cubes yet--use the Add Cards button above to get started. Get drafting!!</p>
+<div class="empty-state">
+    <p>No cards in this cube yet.</p>
+    <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
 </div>
 {% endif %}
 
-<button type="button" id="floatingRemoveBtn" class="card-action-button">Remove Card</button>
-
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cards = document.querySelectorAll('.card');
-        const floatingBtn = document.getElementById('floatingRemoveBtn');
-        
-        let selectedCardId = null;
-        let selectedCardName = null;
-        let clickedCardElement = null;
+function toggleEditMode() {
+    const btn = document.getElementById('editCardsBtn');
+    const editing = btn.dataset.editing === 'true';
+    btn.dataset.editing = !editing;
+    btn.textContent = editing ? 'Edit Cards' : 'Done Editing';
+    document.querySelectorAll('.btn-remove-card').forEach(b => {
+        b.style.display = editing ? 'none' : 'block';
+    });
+}
 
-        cards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                
-                selectedCardId = card.dataset.cardId;
-                selectedCardName = card.dataset.name;
-                clickedCardElement = card;
+document.addEventListener('DOMContentLoaded', () => {
+    // Hide remove buttons until edit mode is on
+    document.querySelectorAll('.btn-remove-card').forEach(b => {
+        b.style.display = 'none';
+    });
 
-                floatingBtn.style.left = e.pageX + 'px';
-                floatingBtn.style.top = e.pageY + 'px';
-                floatingBtn.style.display = 'block';
-            });
-        });
+    const cardContainer = document.querySelector('.card-container');
+    if (!cardContainer) return;
 
-        document.addEventListener('click', (e) => {
-            if (e.target === floatingBtn) {
-                floatingBtn.style.display = 'none';
-                
-                fetch(`/cube/{{ cube.id }}/remove`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ card_id: selectedCardId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Success:', data);
-                        showToast(`${selectedCardName} was removed from the cube.`, 'success');
-                        clickedCardElement.remove();
-                    } else {
-                        showToast(data.error || "Error removing card.", 'fail');
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showToast("Error removing card from cube.", 'fail');
-                });
-                
-            } else if (!e.target.closest('.card')) {
-                floatingBtn.style.display = 'none';
-                selectedCardId = null;
-                clickedCardElement = null;
+    cardContainer.addEventListener('click', (e) => {
+        const removeButton = e.target.closest('.btn-remove-card');
+        if (!removeButton) return;
+
+        const card = removeButton.closest('.card');
+        const cardId = card.dataset.cardId;
+        const cardName = card.dataset.name;
+
+        removeButton.disabled = true;
+        removeButton.innerText = "Removing...";
+
+        fetch(`/cube/{{ cube.id }}/remove`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: parseInt(cardId) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`${cardName} removed from cube.`);
+                card.remove();
+            } else {
+                showToast(data.error || "Error removing card.");
+                removeButton.disabled = false;
+                removeButton.innerText = "Remove from Cube";
             }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showToast("Error removing card.");
+            removeButton.disabled = false;
+            removeButton.innerText = "Remove from Cube";
         });
     });
+});
 </script>
 
 {% endblock %}
