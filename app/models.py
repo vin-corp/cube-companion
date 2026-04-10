@@ -24,6 +24,7 @@ class Cube(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    share_id = db.Column(db.String(36), unique=True, nullable=True, default=None)
     cards = db.relationship('Card', backref='cube_ref', lazy=True, cascade='all, delete-orphan')
 
 class Card(db.Model):

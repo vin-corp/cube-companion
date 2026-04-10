@@ -14,21 +14,39 @@
 <div class="cube-list">
     {% for cube in cubes %}
     <div class="cube-card">
-        <div class="cube-card-body">
-            <h3 class="cube-name">{{ cube.name }}</h3>
-            {% if cube.description %}
-            <p class="cube-description">{{ cube.description }}</p>
-            {% endif %}
-            <p class="cube-meta">Created {{ cube.created_at.strftime('%b %d, %Y') }}</p>
+        <div class="cube-card-top">
+            <div class="cube-card-body">
+                <h3 class="cube-name">{{ cube.name }}</h3>
+                {% if cube.description %}
+                <p class="cube-description">{{ cube.description }}</p>
+                {% endif %}
+                <p class="cube-meta">Created {{ cube.created_at.strftime('%b %d, %Y') }}</p>
+            </div>
+            <div class="cube-card-actions">
+                <a href="{{ url_for('main.view_cube', cube_id=cube.id) }}" class="btn btn-primary btn-sm">View Cards</a>
+                <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary btn-sm">Search Cards</a>
+                <a href="{{ url_for('main.edit_cube', cube_id=cube.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                {% if not cube.share_id %}
+                <form method="POST" action="{{ url_for('main.generate_share_link', cube_id=cube.id) }}">
+                    <button type="submit" class="btn btn-secondary btn-sm">Share</button>
+                </form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('main.delete_cube', cube_id=cube.id) }}" onsubmit="return confirm('Delete \'{{ cube.name }}\'?')">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
         </div>
-        <div class="cube-card-actions">
-            <a href="{{ url_for('main.view_cube', cube_id=cube.id) }}" class="btn btn-primary btn-sm">View Added Cards</a>
-            <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary btn-sm">Search Cards</a>
-            <a href="{{ url_for('main.edit_cube', cube_id=cube.id) }}" class="btn btn-secondary btn-sm">Edit</a>
-            <form method="POST" action="{{ url_for('main.delete_cube', cube_id=cube.id) }}" onsubmit="return confirm('Delete \'{{ cube.name }}\'?')">
-                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        {% if cube.share_id %}
+        <div class="cube-share-row">
+            <input type="text" class="share-link-input" id="share-{{ cube.id }}"
+                   value="{{ url_for('main.shared_cube', share_id=cube.share_id, _external=True) }}" readonly>
+            <button class="btn btn-secondary btn-sm" onclick="copyShareLink('share-{{ cube.id }}', this)">Copy Link</button>
+            <form method="POST" action="{{ url_for('main.revoke_share_link', cube_id=cube.id) }}"
+                  onsubmit="return confirm('Revoke this share link? Anyone with the link will lose access.')">
+                <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
             </form>
         </div>
+        {% endif %}
     </div>
     {% endfor %}
 </div>
@@ -38,4 +56,15 @@
     <a href="{{ url_for('main.create_cube') }}" class="btn btn-primary">Create your first cube</a>
 </div>
 {% endif %}
+
+<script>
+function copyShareLink(inputId, btn) {
+    const input = document.getElementById(inputId);
+    navigator.clipboard.writeText(input.value).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+    });
+}
+</script>
 {% endblock %}

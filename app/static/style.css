@@ -214,11 +214,40 @@ a:hover { text-decoration: underline; }
     border-radius: 12px;
     padding: 20px 24px;
     display: flex;
+    flex-direction: column;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.cube-card-top {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     flex-wrap: wrap;
+}
+
+.cube-share-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #2a2f3d;
+    flex-wrap: wrap;
+}
+
+.share-link-input {
+    flex: 1;
+    min-width: 0;
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #b0b8c1;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: text;
 }
 
 .cube-name {
