@@ -35,6 +35,23 @@
                     toast.remove();
                 }, 4000);
             }
+
+            function formatCardText(text) {
+                if (!text) return '';
+                // Escape HTML to prevent injection
+                const escaped = text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+                // Italicize reminder text in parentheses
+                return escaped.replace(/\(([^)]+)\)/g, '<em>($1)</em>');
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.card-text').forEach(el => {
+                    el.innerHTML = formatCardText(el.textContent);
+                });
+            });
         </script>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}

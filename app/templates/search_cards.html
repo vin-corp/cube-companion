@@ -45,8 +45,14 @@
             {% if card.oracle_text %}
             <div class="card-text">{{ card.oracle_text }}</div>
             {% endif %}
-            <button type="button" class="btn-add-card">
-                Add to Cube
+            {% set db_id = existing.get(card.id) %}
+            <button type="button" class="btn-add-card"
+                {% if db_id %}
+                data-state="added"
+                data-card-db-id="{{ db_id }}"
+                style="background-color: #c0392b;"
+                {% endif %}>
+                {{ 'Remove from Cube' if db_id else 'Add to Cube' }}
             </button>
         </div>
     </div>
@@ -54,68 +60,34 @@
 </div>
 {% endif %}
 
-<button type="button" id="floatingAddBtn" class="card-action-button">Add to Cube</button>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const cardContainer = document.querySelector('.card-container');
-    const floatingBtn = document.getElementById('floatingAddBtn');
-    let selectedCardData = null;
+    if (!cardContainer) return;
 
-    if (cardContainer) {
-        cardContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.card');
-            if (!card) return;
+    cardContainer.addEventListener('click', (e) => {
+        const addButton = e.target.closest('.btn-add-card');
+        if (!addButton) return;
 
-            const cardData = {
-                name: card.dataset.name,
-                scryfall_id: card.dataset.scryfallId,
-                image_url: card.dataset.imageUrl,
-                mana_cost: card.dataset.manaCost,
-                type_line: card.dataset.typeLine,
-                text_box: card.dataset.textBox
-            };
+        const card = addButton.closest('.card');
+        const cardData = {
+            name: card.dataset.name,
+            scryfall_id: card.dataset.scryfallId,
+            image_url: card.dataset.imageUrl,
+            mana_cost: card.dataset.manaCost,
+            type_line: card.dataset.typeLine,
+            text_box: card.dataset.textBox
+        };
 
-            const addButton = e.target.closest('.btn-add-card');
-            if (addButton) {
-                e.stopPropagation();
-                floatingBtn.style.display = 'none';
-                performAdd(cardData, addButton);
-                return;
-            }
-
-            // If they click anywhere else on the card show floating button
-            selectedCardData = cardData;
-            floatingBtn.style.left = e.pageX + 'px';
-            floatingBtn.style.top = e.pageY + 'px';
-            floatingBtn.style.display = 'block';
-            e.stopPropagation();
-        });
-    }
-
-    document.addEventListener('click', (e) => {
-        if (e.target !== floatingBtn) {
-            floatingBtn.style.display = 'none';
+        if (addButton.dataset.state === 'added') {
+            performRemove(cardData, addButton);
+        } else {
+            performAdd(cardData, addButton);
         }
-    });
-
-    // floating button click
-    floatingBtn.addEventListener('click', () => {
-        if (selectedCardData) {
-            performAdd(selectedCardData);
-            floatingBtn.style.display = 'none';
-        }
-    });
-
-    // Formatting mana icons on load
-    document.querySelectorAll('.card-mana').forEach(el => {
-        el.innerHTML = formatMana(el.innerText);
     });
 });
 
-// Fetch logic shared by both click types
 function performAdd(cardData, buttonElement = null) {
-    const originalText = buttonElement ? buttonElement.innerText : null;
     if (buttonElement) {
         buttonElement.disabled = true;
         buttonElement.innerText = "Adding...";
@@ -130,13 +102,11 @@ function performAdd(cardData, buttonElement = null) {
     .then(data => {
         showToast(`${cardData.name} added!`);
         if (buttonElement) {
-            buttonElement.innerText = "Added!";
-            buttonElement.style.backgroundColor = "#155724";
-            setTimeout(() => {
-                buttonElement.disabled = false;
-                buttonElement.innerText = originalText;
-                buttonElement.style.backgroundColor = "";
-            }, 2000);
+            buttonElement.disabled = false;
+            buttonElement.innerText = "Remove from Cube";
+            buttonElement.style.backgroundColor = "#c0392b";
+            buttonElement.dataset.state = "added";
+            buttonElement.dataset.cardDbId = data.card_id;
         }
     })
     .catch(err => {
@@ -144,30 +114,39 @@ function performAdd(cardData, buttonElement = null) {
         showToast("Error adding card.");
         if (buttonElement) {
             buttonElement.disabled = false;
-            buttonElement.innerText = originalText;
+            buttonElement.innerText = "Add to Cube";
         }
     });
 }
 
-</script>
+function performRemove(cardData, buttonElement) {
+    buttonElement.disabled = true;
+    buttonElement.innerText = "Removing...";
 
-<script>
-// helper to turn {W}{U} into icons
-function formatMana(manaStr) {
-    if (!manaStr) return "";
-    return manaStr.replace(/{(.*?)}/g, (match, symbol) => {
-        const s = symbol.replace("/", "").toUpperCase(); 
-        return `<img src="https://svgs.scryfall.io/card-symbols/${s}.svg" class="mana-symbol" alt="${s}">`;
+    fetch(`/cube/{{ cube.id }}/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ card_id: parseInt(buttonElement.dataset.cardDbId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showToast(`${cardData.name} removed!`);
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Add to Cube";
+        buttonElement.style.backgroundColor = "";
+        delete buttonElement.dataset.state;
+        delete buttonElement.dataset.cardDbId;
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showToast("Error removing card.");
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Remove from Cube";
     });
 }
 
-// Apply the mana icons to the page
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.card-mana').forEach(el => {
-        el.innerHTML = formatMana(el.innerText);
-    });
-});
 </script>
+
 
 {% endblock %}
 

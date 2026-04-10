@@ -214,11 +214,40 @@ a:hover { text-decoration: underline; }
     border-radius: 12px;
     padding: 20px 24px;
     display: flex;
+    flex-direction: column;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.cube-card-top {
+    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     flex-wrap: wrap;
+}
+
+.cube-share-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #2a2f3d;
+    flex-wrap: wrap;
+}
+
+.share-link-input {
+    flex: 1;
+    min-width: 0;
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #b0b8c1;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: text;
 }
 
 .cube-name {
@@ -328,14 +357,15 @@ a:hover { text-decoration: underline; }
     filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); /* Professional depth */
 }
 
-.card-text { 
-    font-size: 0.9rem; 
-    line-height: 1.4; 
+.card-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
     margin-bottom: 15px;
     flex-grow: 1;
     overflow-y: auto;       /* Keep vertical scroll for long text */
     overflow-x: hidden;     /* REMOVE horizontal scrollbars */
     padding-right: 8px;     /* Space so text doesn't hit the scrollbar */
+    white-space: pre-wrap;  /* Preserve newlines from Scryfall oracle text */
 }
 
 .card-type {
@@ -380,6 +410,7 @@ a:hover { text-decoration: underline; }
 
 .btn-add-card {
     flex-shrink: 0;
+    margin-top: auto;
     background-color: #28a745;
     color: white;
     border: none;
@@ -393,6 +424,30 @@ a:hover { text-decoration: underline; }
 .btn-add-card:hover {
     background-color: #218838;
     transform: scale(1.05);
+}
+
+.btn-remove-card {
+    flex-shrink: 0;
+    margin-top: auto;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-remove-card:hover {
+    background-color: #a93226;
+    transform: scale(1.05);
+}
+
+.btn-remove-card:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .mana-symbol {

@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash
 from flask_login import login_required, current_user
 from .models import Cube, Card
 from .extensions import db
 import requests as scryfall_requests
+import uuid
 
 main = Blueprint("main", __name__)
 
@@ -86,7 +87,10 @@ def search_cards(cube_id):
             except Exception:
                 error = "Could not connect to Scryfall. Try again."
 
-    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error)
+    # Map scryfall_id -> db card id for cards already in this cube
+    existing = {c.scryfall_id: c.id for c in cube.cards if c.scryfall_id}
+
+    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error, existing=existing)
 
 @main.route('/cube/<int:cube_id>/add', methods=['POST'])
 @login_required
@@ -115,11 +119,10 @@ def add_to_cube(cube_id):
     db.session.add(new_card)
     db.session.commit()
     
-    print(f">>> {new_card.name} added to {cube.name}")
-    
     return jsonify({
         "success": True,
-        "message": f"Added {new_card.name} to {cube.name}!"
+        "message": f"Added {new_card.name} to {cube.name}!",
+        "card_id": new_card.id
     }), 200
 
 @main.route('/cube/<int:cube_id>/view', methods=['GET'])
@@ -151,6 +154,63 @@ def remove_from_cube(cube_id):
         }), 200
 
     return jsonify({"error": "Card not found or doesn't belong to this cube"}), 404
+
+@main.route('/cube/<int:cube_id>/share/generate', methods=['POST'])
+@login_required
+def generate_share_link(cube_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        abort(403)
+    if not cube.share_id:
+        cube.share_id = str(uuid.uuid4())
+        db.session.commit()
+    return redirect(url_for('main.dashboard'))
+
+
+@main.route('/cube/<int:cube_id>/share/revoke', methods=['POST'])
+@login_required
+def revoke_share_link(cube_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        abort(403)
+    cube.share_id = None
+    db.session.commit()
+    flash('Share link revoked.', 'success')
+    return redirect(url_for('main.dashboard'))
+
+
+@main.route('/shared/<share_id>')
+def shared_cube(share_id):
+    cube = Cube.query.filter_by(share_id=share_id).first_or_404()
+    cards = cube.cards
+    return render_template('shared_cube.html', cube=cube, cards=cards)
+
+
+@main.route('/shared/<share_id>/copy', methods=['POST'])
+@login_required
+def copy_shared_cube(share_id):
+    source = Cube.query.filter_by(share_id=share_id).first_or_404()
+    new_cube = Cube(
+        name=f"{source.name} (Copy)",
+        description=source.description,
+        user_id=current_user.id
+    )
+    db.session.add(new_cube)
+    db.session.flush()
+    for card in source.cards:
+        db.session.add(Card(
+            name=card.name,
+            scryfall_id=card.scryfall_id,
+            image_url=card.image_url,
+            mana_cost=card.mana_cost,
+            type_line=card.type_line,
+            text_box=card.text_box,
+            cube_id=new_cube.id
+        ))
+    db.session.commit()
+    flash(f'"{source.name}" has been copied to your collection.', 'success')
+    return redirect(url_for('main.dashboard'))
+
 
 """
 @app.route('/share/card/<share_id>')
