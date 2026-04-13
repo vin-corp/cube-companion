@@ -1,8 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash, current_app
 from flask_login import login_required, current_user
-from .models import Cube, Card
+from .models import Cube, Card, CustomCard
 from .extensions import db
 import requests as scryfall_requests
+from werkzeug.utils import secure_filename
+import uuid
+import os
 
 main = Blueprint("main", __name__)
 
@@ -105,6 +108,8 @@ def add_to_cube(cube_id):
         mana_cost=data.get('mana_cost'),
         type_line=data.get('type_line'),
         text_box=data.get('text_box'),
+        power=data.get('power'),
+        toughness=data.get('toughness'),
         cube_id=cube.id
     )
     
@@ -154,3 +159,64 @@ def shared_card(share_id):
     card = CustomCard.query.filter_by(share_id=uuid).first_or_404()
     return render_template('shared_card.html', card=card)
 """
+
+@main.route('/create_card', methods=['GET', 'POST'])
+@login_required
+def create_card():
+    if request.method == 'POST':
+        name = request.form.get('cardName', '').strip()
+        mana_cost = request.form.get('manaCost', '').strip()
+        type_line = request.form.get('typeLine', '').strip()
+        rules_text = request.form.get('rulesText', '').strip()
+        power = request.form.get('power', '').strip()
+        toughness = request.form.get('toughness', '').strip()
+        
+        image = request.files.get('cardImage')
+        
+        if not name:
+            flash("Can't upload card: Card name cannot be blank", "error")
+            return redirect(url_for('main.create_card'))
+            
+        if not image or image.filename == '':
+            flash("Can't upload card: Image cannot be blank", "error")
+            return redirect(url_for('main.create_card'))
+            
+        existing_card = CustomCard.query.filter_by(name=name, user_id=current_user.id).first()
+        if existing_card:
+            flash("Can't upload card: Card with that name already exists", "error")
+            return redirect(url_for('main.create_card'))
+            
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        card_uuid = str(uuid.uuid4())
+        
+        original_filename = secure_filename(image.filename)
+        _, ext = os.path.splitext(original_filename)
+        
+        unique_filename = f"{card_uuid}{ext}"
+        filepath = os.path.join(upload_dir, unique_filename)
+        
+        image.save(filepath)
+        
+        local_image_path = f"uploads/{unique_filename}"
+        
+        new_card = CustomCard(
+            uuid=card_uuid,
+            name=name,
+            local_image_path=local_image_path,
+            mana_cost=mana_cost,
+            type_line=type_line,
+            text_box=rules_text,
+            power=power,
+            toughness=toughness,
+            user_id=current_user.id
+        )
+        
+        db.session.add(new_card)
+        db.session.commit()
+        
+        flash(f"{name} successfully added to your custom cards!", "success")
+        return redirect(url_for('main.create_card'))
+        
+    return render_template('create_card.html')

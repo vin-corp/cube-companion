@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Add Card - Cube Companion{% endblock %}
+
+{% block content %}
+
+<form class="card-entry-layout" method="POST" action="{{ url_for('main.create_card') }}" enctype="multipart/form-data">
+    
+    <div class="card-media-container">
+        <div class="card-uploader-outline" onclick="document.getElementById('cardImage').click()">
+            <input type="file" id="cardImage" name="cardImage" accept="image/*" style="display: none;" onchange="previewImage(event)">
+            
+            <span class="upload-text" id="uploadText">Upload Image</span>
+            
+            <img id="imagePreview" src="" alt="Card Preview" style="display: none;">
+        </div>
+        
+        <a href="#" id="deleteImageLink" class="delete-link" style="display: none;" onclick="clearImage(event)">Delete Image</a>
+    </div>
+
+    <div class="card-form-container">
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="cardName">Name</label>
+                <input type="text" id="cardName" name="cardName">
+            </div>
+            <div class="card-entry-group">
+                <label for="manaCost">Mana Cost</label>
+                <input type="text" id="manaCost" name="manaCost">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="typeLine">Type Line</label>
+                <input type="text" id="typeLine" name="typeLine">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="rulesText">Rules Text</label>
+                <textarea id="rulesText" name="rulesText"></textarea>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="power">Power</label>
+                <input type="text" id="power" name="power">
+            </div>
+            <div class="card-entry-group">
+                <label for="toughness">Toughness</label>
+                <input type="text" id="toughness" name="toughness">
+            </div>
+            <div class="card-entry-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn-green-upload">Upload</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                
+                // Toggle visibility
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('uploadText').style.display = 'none';
+                document.getElementById('deleteImageLink').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function clearImage(event) {
+        event.preventDefault();
+        
+        document.getElementById('cardImage').value = '';
+        
+        document.getElementById('imagePreview').src = '';
+        
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('uploadText').style.display = 'block';
+        document.getElementById('deleteImageLink').style.display = 'none';
+    }
+</script>
+{% endblock %}

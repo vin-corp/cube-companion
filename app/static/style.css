@@ -372,3 +372,138 @@ a:hover { text-decoration: underline; }
     87.5% { opacity: 1; }
     100% { opacity: 0; }
 }
+
+/* ── Custom Cards ── */
+.card-entry-layout {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        align-items: flex-start;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .card-media-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+
+    .card-uploader-outline {
+        width: 350px;
+        height: 490px;
+        background-color: #12151d;
+        border: 12px solid #5a5a58;
+        border-radius: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-uploader-outline:hover {
+        border-color: #ffd700;
+        transform: translateY(-2px);
+    }
+
+    .card-uploader-outline .upload-text {
+        color: #5a5a58;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    #imagePreview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .delete-link {
+        color: #c0392b;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+
+    .delete-link:hover {
+        color: #e74c3c;
+        text-decoration: underline;
+    }
+
+    .card-form-container {
+        background-color: #1a1f2b;
+        padding: 30px;
+        border-radius: 8px;
+        flex: 1;
+        max-width: 650px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .card-entry-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .card-entry-group label {
+        color: #ffd700;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .card-entry-group input,
+    .card-entry-group textarea {
+        background-color: #ffffe0;
+        color: #0d0f14;
+        border: none;
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 1rem;
+        font-family: inherit;
+        outline: none;
+        width: 100%;
+        transition: box-shadow 0.2s;
+    }
+
+    .card-entry-group input:focus,
+    .card-entry-group textarea:focus {
+        box-shadow: 0 0 0 2px #ffd700;
+    }
+
+    .card-entry-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .btn-green-upload {
+        background-color: #00c800;
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        height: 100%; 
+        min-height: 44px;
+        transition: opacity 0.2s, background-color 0.2s;
+    }
+
+    .btn-green-upload:hover {
+        background-color: #00aa00;
+    }
