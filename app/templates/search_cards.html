@@ -31,8 +31,10 @@
          data-mana-cost="{{ card.mana_cost or '' }}"
          data-type-line="{{ card.type_line or '' }}"
          data-text-box="{{ card.oracle_text or '' }}">
-        {% if card.image_uris %}
-        <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
+        {% if card.image_uris and card.image_uris.normal %}
+            <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
+        {% else %}
+            <div class="no-image">No Image Available</div>
         {% endif %}
         <div class="card-content">
             <div class="card-title">{{ card.name }}</div>
@@ -43,68 +45,108 @@
             {% if card.oracle_text %}
             <div class="card-text">{{ card.oracle_text }}</div>
             {% endif %}
+            {% set db_id = existing.get(card.id) %}
+            <button type="button" class="btn-add-card"
+                {% if db_id %}
+                data-state="added"
+                data-card-db-id="{{ db_id }}"
+                style="background-color: #c0392b;"
+                {% endif %}>
+                {{ 'Remove from Cube' if db_id else 'Add to Cube' }}
+            </button>
         </div>
     </div>
     {% endfor %}
 </div>
 {% endif %}
 
-<button type="button" id="floatingAddBtn" class="card-action-button">Add to Cube</button>
-
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cards = document.querySelectorAll('.card');
-        const floatingBtn = document.getElementById('floatingAddBtn');
-        
-        let selectedCardData = null;
+document.addEventListener('DOMContentLoaded', () => {
+    const cardContainer = document.querySelector('.card-container');
+    if (!cardContainer) return;
 
-        cards.forEach(card => {
-            card.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                
-                selectedCardData = {
-                    name: card.dataset.name,
-                    scryfall_id: card.dataset.scryfallId,
-                    image_url: card.dataset.imageUrl,
-                    mana_cost: card.dataset.manaCost,
-                    type_line: card.dataset.typeLine,
-                    text_box: card.dataset.textBox
-                };
+    cardContainer.addEventListener('click', (e) => {
+        const addButton = e.target.closest('.btn-add-card');
+        if (!addButton) return;
 
-                floatingBtn.style.left = e.pageX + 'px';
-                floatingBtn.style.top = e.pageY + 'px';
-                floatingBtn.style.display = 'block';
-            });
-        });
+        const card = addButton.closest('.card');
+        const cardData = {
+            name: card.dataset.name,
+            scryfall_id: card.dataset.scryfallId,
+            image_url: card.dataset.imageUrl,
+            mana_cost: card.dataset.manaCost,
+            type_line: card.dataset.typeLine,
+            text_box: card.dataset.textBox
+        };
 
-        document.addEventListener('click', (e) => {
-            if (e.target === floatingBtn) {
-                floatingBtn.style.display = 'none';
-                
-                fetch(`/cube/{{ cube.id }}/add`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(selectedCardData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
-                    showToast(`${selectedCardData.name} was added to your cube!`, 'success');
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    showToast("Error adding card to cube.", 'fail');
-                });
-                
-            } else if (!e.target.closest('.card')) {
-                floatingBtn.style.display = 'none';
-                selectedCardData = null;
-            }
-        });
+        if (addButton.dataset.state === 'added') {
+            performRemove(cardData, addButton);
+        } else {
+            performAdd(cardData, addButton);
+        }
     });
+});
+
+function performAdd(cardData, buttonElement = null) {
+    if (buttonElement) {
+        buttonElement.disabled = true;
+        buttonElement.innerText = "Adding...";
+    }
+
+    fetch(`/cube/{{ cube.id }}/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cardData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showToast(`${cardData.name} added!`);
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.innerText = "Remove from Cube";
+            buttonElement.style.backgroundColor = "#c0392b";
+            buttonElement.dataset.state = "added";
+            buttonElement.dataset.cardDbId = data.card_id;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showToast("Error adding card.");
+        if (buttonElement) {
+            buttonElement.disabled = false;
+            buttonElement.innerText = "Add to Cube";
+        }
+    });
+}
+
+function performRemove(cardData, buttonElement) {
+    buttonElement.disabled = true;
+    buttonElement.innerText = "Removing...";
+
+    fetch(`/cube/{{ cube.id }}/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ card_id: parseInt(buttonElement.dataset.cardDbId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showToast(`${cardData.name} removed!`);
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Add to Cube";
+        buttonElement.style.backgroundColor = "";
+        delete buttonElement.dataset.state;
+        delete buttonElement.dataset.cardDbId;
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showToast("Error removing card.");
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Remove from Cube";
+    });
+}
 
 </script>
 
+
 {% endblock %}
+
