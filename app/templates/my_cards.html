@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}My Custom Cards - Cube Companion{% endblock %}
+
+{% block content %}
+<div class="custom-cards-wrapper">
+    
+    <div class="search-bar-container">
+        <input type="text" id="cardSearch" placeholder="Search custom cards...">
+        <button type="button" class="btn-green-search">Search</button>
+    </div>
+
+    <div class="custom-cards-box">
+        {% if custom_cards %}
+            {% for card in custom_cards %}
+            <div class="list-card">
+                
+                <div class="list-card-img">
+                    {% if card.local_image_path %}
+                        <img src="{{ url_for('static', filename=card.local_image_path) }}" alt="{{ card.name }}">
+                    {% else %}
+                        <div class="img-placeholder">No Image</div>
+                    {% endif %}
+                </div>
+                
+                <div class="list-card-body">
+                    
+                    <div class="list-card-header">
+                        <div class="list-card-title">{{ card.name }}</div>
+                        <div class="list-card-mana">{{ card.mana_cost }}</div>
+                    </div>
+                    
+                    <div class="list-card-subheader">
+                        <div class="list-card-type">{{ card.type_line }}</div>
+                        <div class="list-card-pt">
+                            {% if card.power or card.toughness %}
+                                {{ card.power }}/{{ card.toughness }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="list-card-text">
+                        {{ card.text_box }}
+                    </div>
+                    
+                    <div class="list-card-footer">
+                        <div class="list-card-cubes">
+                            Part of cubes: Cube 1, Cube 2...
+                        </div>
+                        <div class="list-card-actions">
+                            <button class="btn btn-danger">Remove Card</button>
+                            <button class="btn btn-secondary">Edit Card</button>
+                            <button class="btn btn-secondary">Add to Cube</button>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            {% if not loop.last %}
+            <hr class="card-divider">
+            {% endif %}
+            
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>You haven't created any custom cards yet.</p>
+                <a href="{{ url_for('main.create_card') }}" class="btn btn-primary">Create a Card</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

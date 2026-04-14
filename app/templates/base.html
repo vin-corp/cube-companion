@@ -12,7 +12,8 @@
             <div class="nav-links">
                 {% if current_user.is_authenticated %}
                 <span class="nav-user">{{ current_user.username }}</span>
-                <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('main.dashboard') }}">Cube Dashboard</a>
+                <a href="{{ url_for('main.my_cards') }}">My Cards</a>
                 <a href="{{ url_for('main.create_card') }}">Create Card</a>
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
                 {% else %}

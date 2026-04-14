@@ -283,3 +283,12 @@ def create_card():
         return redirect(url_for('main.create_card'))
         
     return render_template('create_card.html')
+
+@main.route("/my_cards")
+@login_required
+def my_cards():
+    # Fetch all custom cards created by the currently logged-in user
+    user_cards = CustomCard.query.filter_by(user_id=current_user.id).all()
+    
+    # Render the template and pass the cards to it
+    return render_template("my_cards.html", custom_cards=user_cards)
