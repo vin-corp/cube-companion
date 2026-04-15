@@ -293,11 +293,21 @@ def create_card():
         
     return render_template('create_card.html')
 
-@main.route("/my_cards")
+@main.route('/my_cards')
 @login_required
 def my_cards():
     user_cards = CustomCard.query.filter_by(user_id=current_user.id).all()
-    return render_template("my_cards.html", custom_cards=user_cards)
+    user_cubes = current_user.cubes
+
+    enrolled_cubes = {}
+    for card in user_cards:
+        slots = Card.query.filter_by(custom_card_id=card.id).all()
+        enrolled_cubes[card.id] = [slot.cube_id for slot in slots]
+        
+    return render_template("my_cards.html", 
+                           custom_cards=user_cards, 
+                           user_cubes=user_cubes, 
+                           enrolled_cubes=enrolled_cubes)
 
 @main.route('/delete_custom_card/<int:card_id>', methods=['POST'])
 @login_required
@@ -362,3 +372,47 @@ def edit_card(card_id):
                            power=card.power,
                            toughness=card.toughness,
                            local_image_path=card.local_image_path)
+
+@main.route('/update_card_cubes/<int:card_id>', methods=['POST'])
+@login_required
+def update_card_cubes(card_id):
+    card = CustomCard.query.get_or_404(card_id)
+    
+    if card.user_id != current_user.id:
+        flash("You do not have permission to modify this card.", "error")
+        return redirect(url_for('main.my_cards'))
+
+    selected_cube_ids = [int(cid) for cid in request.form.getlist('cube_ids')]
+
+    current_slots = Card.query.filter_by(custom_card_id=card.id).all()
+    current_cube_ids = [slot.cube_id for slot in current_slots]
+
+    changes_made = False
+
+    for cid in selected_cube_ids:
+        if cid not in current_cube_ids:
+
+            new_slot = Card(
+                cube_id=cid,
+                custom_card_id=card.id,
+                name=card.name,
+                image_url=card.local_image_path,
+                mana_cost=card.mana_cost,
+                type_line=card.type_line,
+                power=card.power,                 
+                toughness=card.toughness,         
+                text_box=card.text_box
+            )
+            db.session.add(new_slot)
+            changes_made = True
+            
+    for slot in current_slots:
+        if slot.cube_id not in selected_cube_ids:
+            db.session.delete(slot)
+            changes_made = True
+
+    if changes_made:
+        db.session.commit()
+        flash("Cube enrollment successfully changed.", "success")
+
+    return redirect(url_for('main.my_cards'))

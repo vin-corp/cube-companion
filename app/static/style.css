@@ -769,7 +769,7 @@ a:hover { text-decoration: underline; }
     color: #e6e6e6;
     font-size: 0.95rem;
     line-height: 1.5;
-    white-space: pre-wrap; /* Preserves line breaks from textarea */
+    white-space: pre-line; /* Preserves line breaks from textarea */
     overflow-y: auto;
     padding-right: 15px; /* Room for scrollbar */
 }
@@ -810,3 +810,43 @@ a:hover { text-decoration: underline; }
     display: flex;
     gap: 12px;
 }
+
+.cube-modal {
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 20px;
+        width: 400px;
+        max-width: 90%;
+        background-color: #2d2d2d;
+        color: #eaeaea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        
+        margin: 0;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .cube-modal::backdrop {
+        background-color: rgba(0, 0, 0, 0.75);
+    }
+    .cube-enrollment-list {
+        max-height: 250px;
+        overflow-y: auto;
+        margin: 15px 0;
+        background: #1a1a1a;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 10px;
+    }
+    .cube-enrollment-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #444;
+        color: #eaeaea;
+    }
+    .cube-enrollment-list-item:last-child {
+        border-bottom: none;
+    }
