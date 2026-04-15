@@ -236,18 +236,27 @@ def create_card():
         
         image = request.files.get('cardImage')
         
+        form_data = {
+            'name': name,
+            'mana_cost': mana_cost,
+            'type_line': type_line,
+            'rules_text': rules_text,
+            'power': power,
+            'toughness': toughness
+        }
+        
         if not name:
             flash("Can't upload card: Card name cannot be blank", "error")
-            return redirect(url_for('main.create_card'))
+            return render_template('create_card.html', **form_data)
             
         if not image or image.filename == '':
             flash("Can't upload card: Image cannot be blank", "error")
-            return redirect(url_for('main.create_card'))
+            return render_template('create_card.html', **form_data)
             
         existing_card = CustomCard.query.filter_by(name=name, user_id=current_user.id).first()
         if existing_card:
             flash("Can't upload card: Card with that name already exists", "error")
-            return redirect(url_for('main.create_card'))
+            return render_template('create_card.html', **form_data)
             
         upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
         os.makedirs(upload_dir, exist_ok=True)
@@ -287,8 +296,24 @@ def create_card():
 @main.route("/my_cards")
 @login_required
 def my_cards():
-    # Fetch all custom cards created by the currently logged-in user
     user_cards = CustomCard.query.filter_by(user_id=current_user.id).all()
-    
-    # Render the template and pass the cards to it
     return render_template("my_cards.html", custom_cards=user_cards)
+
+@main.route('/delete_custom_card/<int:card_id>', methods=['POST'])
+@login_required
+def delete_custom_card(card_id):
+    card = CustomCard.query.get_or_404(card_id)
+    
+    if card.user_id != current_user.id:
+        flash("You do not have permission to delete this card.", "error")
+        return redirect(url_for('main.my_cards')) 
+        
+    card_name = card.name
+    
+    Card.query.filter_by(custom_card_id=card.id).delete()
+    
+    db.session.delete(card)
+    db.session.commit()
+    
+    flash(f"{card_name} deleted from your custom cards.", "success")
+    return redirect(url_for('main.my_cards'))

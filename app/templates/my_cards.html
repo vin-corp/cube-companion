@@ -48,7 +48,14 @@
                             Part of cubes: Cube 1, Cube 2...
                         </div>
                         <div class="list-card-actions">
-                            <button class="btn btn-danger">Remove Card</button>
+                            <form method="POST" action="{{ url_for('main.delete_custom_card', card_id=card.id) }}" style="display: inline;">
+                                <button type="submit" 
+                                        class="btn btn-danger" 
+                                        data-card-name="{{ card.name }}" 
+                                        onclick="confirmDelete(event, this)">
+                                    Delete Card
+                                </button>
+                            </form>
                             <button class="btn btn-secondary">Edit Card</button>
                             <button class="btn btn-secondary">Add to Cube</button>
                         </div>
@@ -70,4 +77,16 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+    function confirmDelete(event, buttonElement) {
+        const cardName = buttonElement.getAttribute('data-card-name');
+        const message = `Are you sure you want to delete '${cardName}'? This will remove it from all cubes it's been added to.`;
+        const userConfirmed = confirm(message);
+        if (!userConfirmed) {
+            event.preventDefault();
+        }
+    }
+</script>
+
 {% endblock %}

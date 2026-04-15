@@ -56,11 +56,24 @@
             });
         </script>
         {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-        <script>
-            showToast("{{ message }}", "{{ 'fail' if category == 'error' else 'success' }}");
-        </script>
-        {% endfor %}
+        {% if messages %}
+            <div id="flash-data" style="display: none;">
+                {% for category, message in messages %}
+                <span class="flash-item" 
+                      data-message="{{ message }}" 
+                      data-category="{{ 'fail' if category == 'error' else 'success' }}">
+                </span>
+                {% endfor %}
+            </div>
+
+            <script>
+                document.querySelectorAll('.flash-item').forEach(item => {
+                    const msg = item.getAttribute('data-message');
+                    const cat = item.getAttribute('data-category');
+                    showToast(msg, cat);
+                });
+            </script>
+        {% endif %}
         {% endwith %}
     </body>
 </html>
