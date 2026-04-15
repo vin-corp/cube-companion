@@ -289,7 +289,7 @@ def create_card():
         db.session.commit()
         
         flash(f"{name} successfully added to your custom cards!", "success")
-        return redirect(url_for('main.create_card'))
+        return redirect(url_for('main.edit_card', card_id=new_card.id))
         
     return render_template('create_card.html')
 
@@ -317,3 +317,48 @@ def delete_custom_card(card_id):
     
     flash(f"{card_name} deleted from your custom cards.", "success")
     return redirect(url_for('main.my_cards'))
+
+@main.route('/edit_card/<int:card_id>', methods=['GET', 'POST'])
+@login_required
+def edit_card(card_id):
+    card = CustomCard.query.get_or_404(card_id)
+    
+    if card.user_id != current_user.id:
+        flash("You do not have permission to edit this card.", "error")
+        return redirect(url_for('main.my_cards'))
+
+    if request.method == 'POST':
+        card.name = request.form.get('cardName', '').strip()
+        card.mana_cost = request.form.get('manaCost', '').strip()
+        card.type_line = request.form.get('typeLine', '').strip()
+        card.text_box = request.form.get('rulesText', '').strip()
+        card.power = request.form.get('power', '').strip()
+        card.toughness = request.form.get('toughness', '').strip()
+        
+        image = request.files.get('cardImage')
+        if image and image.filename != '':
+            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            original_filename = secure_filename(image.filename)
+            _, ext = os.path.splitext(original_filename)
+            unique_filename = f"{card.uuid}{ext}"
+            filepath = os.path.join(upload_dir, unique_filename)
+            
+            image.save(filepath)
+            card.local_image_path = f"uploads/{unique_filename}"
+            
+        db.session.commit()
+        flash(f"{card.name} updated successfully!", "success")
+        return redirect(url_for('main.edit_card', card_id=card.id))
+
+    return render_template('create_card.html',
+                           editMode=True,
+                           card_id=card.id,
+                           name=card.name,
+                           mana_cost=card.mana_cost,
+                           type_line=card.type_line,
+                           rules_text=card.text_box,
+                           power=card.power,
+                           toughness=card.toughness,
+                           local_image_path=card.local_image_path)

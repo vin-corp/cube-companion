@@ -56,7 +56,7 @@
                                     Delete Card
                                 </button>
                             </form>
-                            <button class="btn btn-secondary">Edit Card</button>
+                            <a href="{{ url_for('main.edit_card', card_id=card.id) }}" class="btn btn-secondary">Edit Card</a>
                             <button class="btn btn-secondary">Add to Cube</button>
                         </div>
                     </div>
