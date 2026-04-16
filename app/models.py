@@ -4,6 +4,13 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+NAME_MAX_LENGTH = 200
+ID_MAX_LENGTH = 100
+URL_MAX_LENGTH = 500
+MCOST_MAX_LENGTH = 100
+TYPE_MAX_LENGTH = 200
+PT_MAX_LENGTH = 10
+TEXT_BOX_MAX_LENGTH = 1000
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -29,18 +36,33 @@ class Cube(db.Model):
 
 class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    scryfall_id = db.Column(db.String(100))
-    image_url = db.Column(db.String(500))
-    mana_cost = db.Column(db.String(100))
-    type_line = db.Column(db.String(200))
-    power = db.Column(db.String(10))
-    toughness = db.Column(db.String(10))
-    text_box = db.Column(db.String(1000))
+    name = db.Column(db.String(NAME_MAX_LENGTH), nullable=False)
+    scryfall_id = db.Column(db.String(ID_MAX_LENGTH))
+    image_url = db.Column(db.String(URL_MAX_LENGTH))
+    mana_cost = db.Column(db.String(MCOST_MAX_LENGTH))
+    type_line = db.Column(db.String(TYPE_MAX_LENGTH))
+    power = db.Column(db.String(PT_MAX_LENGTH))
+    toughness = db.Column(db.String(PT_MAX_LENGTH))
+    text_box = db.Column(db.String(TEXT_BOX_MAX_LENGTH))
+    layout = db.Column(db.String(ID_MAX_LENGTH))
+    card_faces = db.relationship('CardFace', backref='card', lazy=True, cascade='all, delete-orphan', order_by='CardFace.id')
     
     cube_id = db.Column(db.Integer, db.ForeignKey("cube.id"), nullable=False)
     custom_card_id = db.Column(db.Integer, db.ForeignKey("custom_card.id"), nullable=True)
     custom_card = db.relationship('CustomCard')
+
+class CardFace(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(NAME_MAX_LENGTH), nullable=False)
+    scryfall_id = db.Column(db.String(ID_MAX_LENGTH))
+    image_url = db.Column(db.String(URL_MAX_LENGTH))
+    mana_cost = db.Column(db.String(MCOST_MAX_LENGTH))
+    type_line = db.Column(db.String(TYPE_MAX_LENGTH))
+    power = db.Column(db.String(PT_MAX_LENGTH))
+    toughness = db.Column(db.String(PT_MAX_LENGTH))
+    text_box = db.Column(db.String(TEXT_BOX_MAX_LENGTH))
+    
+    card_id = db.Column(db.Integer, db.ForeignKey("card.id"), nullable=False)
 
 class CustomCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)

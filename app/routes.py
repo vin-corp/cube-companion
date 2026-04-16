@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, abort, jsonify, flash
 from flask_login import login_required, current_user
-from .models import Cube, Card
+from .models import Cube, Card, CardFace, CustomCard
 from .extensions import db
 import requests as scryfall_requests
 import uuid
@@ -113,9 +113,26 @@ def add_to_cube(cube_id):
         mana_cost=data.get('mana_cost'),
         type_line=data.get('type_line'),
         text_box=safe_text,            
-        cube_id=cube_id
+        cube_id=cube_id,
+        layout=data.get('layout')
     )
 
+    faces = data.get('card_faces', [])
+    if faces:
+        for face in faces:
+            safe_face_text = face.get('oracle_text', face.get('text_box', '')).replace('\u2212', '-')
+            safe_face_name = face.get('name', '').replace('\u2212', '-')
+            image_url = face.get('image_url')
+            if not image_url and face.get('image_uris'):
+                image_url = face.get('image_uris', {}).get('normal')
+            new_card.card_faces.append(CardFace(
+                name=safe_face_name,
+                scryfall_id=face.get('scryfall_id'),
+                image_url=image_url,
+                mana_cost=face.get('mana_cost'),
+                type_line=face.get('type_line'),
+                text_box=safe_face_text
+            ))
     db.session.add(new_card)
     db.session.commit()
     

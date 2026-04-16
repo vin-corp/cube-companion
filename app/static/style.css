@@ -330,6 +330,21 @@ a:hover { text-decoration: underline; }
     height: 300px;
  }
 
+.card-text-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+/* Scrollbar for card-text-container */
+.card-text-container::-webkit-scrollbar {
+    width: 6px;
+}
+.card-text-container::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 10px;
+}
+
 .card-title {
     font-size: 1.2rem;
     font-weight: bold;
@@ -365,7 +380,7 @@ a:hover { text-decoration: underline; }
     overflow-y: auto;       /* Keep vertical scroll for long text */
     overflow-x: hidden;     /* REMOVE horizontal scrollbars */
     padding-right: 8px;     /* Space so text doesn't hit the scrollbar */
-    white-space: pre-wrap;  /* Preserve newlines from Scryfall oracle text */
+    white-space: pre-line;  /* Preserve newlines from Scryfall oracle text */
 }
 
 .card-type {
@@ -494,4 +509,71 @@ a:hover { text-decoration: underline; }
     12.5% { opacity: 1; }
     87.5% { opacity: 1; }
     100% { opacity: 0; }
+}
+
+/* ── Dual-face card flip button ── */
+.card-image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-image {
+    width: 100%;
+    display: block;
+}
+
+.btn-flip-face {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.65);
+    border: 2px solid #ffd700;
+    border-radius: 50%;
+    color: #ffd700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    padding: 0;
+    font-size: 16px;
+}
+
+.btn-flip-face::before {
+    content: '⇄';
+    display: block;
+}
+
+.btn-flip-face:hover {
+    background-color: rgba(0, 0, 0, 0.85);
+    transform: scale(1.15);
+}
+
+.btn-flip-face:active {
+    transform: scale(0.95);
+}
+
+.btn-flip-face[data-flipped="true"] {
+    opacity: 0.7;
+}
+
+/* ── Card Faces ── */
+.card-pt {
+    font-size: 0.9rem;
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.card-face {
+    margin-bottom: 10px;
+}
+
+.face-separator {
+    border: none;
+    border-top: 1px solid #2a2f3d;
+    margin: 10px 0;
 }
