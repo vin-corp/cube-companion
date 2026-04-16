@@ -6,6 +6,7 @@ import requests as scryfall_requests
 from werkzeug.utils import secure_filename
 import uuid
 import os
+import shutil
 
 main = Blueprint("main", __name__)
 
@@ -201,16 +202,78 @@ def copy_shared_cube(share_id):
     )
     db.session.add(new_cube)
     db.session.flush()
+
+    # Track original custom_card_id -> new CustomCard so we only copy each once
+    custom_card_map = {}
+
+    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+
     for card in source.cards:
+        new_custom_card_id = None
+        new_image_url = card.image_url
+
+        if card.custom_card_id:
+            if card.custom_card_id in custom_card_map:
+                # Already copied this custom card during this loop
+                new_custom_card_id = custom_card_map[card.custom_card_id].id
+                new_image_url = custom_card_map[card.custom_card_id].local_image_path
+            else:
+                original_cc = card.custom_card
+                # Reuse an existing custom card the user already owns with this name
+                existing = CustomCard.query.filter_by(
+                    user_id=current_user.id, name=original_cc.name
+                ).first()
+                if existing:
+                    new_custom_card_id = existing.id
+                    new_image_url = existing.local_image_path
+                    custom_card_map[card.custom_card_id] = existing
+                else:
+                    # Create a new CustomCard for this user and copy the image file
+                    new_uuid = str(uuid.uuid4())
+                    new_local_image_path = None
+
+                    if original_cc.local_image_path:
+                        src_path = os.path.join(
+                            current_app.root_path, 'static', original_cc.local_image_path
+                        )
+                        _, ext = os.path.splitext(original_cc.local_image_path)
+                        new_filename = f"{new_uuid}{ext}"
+                        dst_path = os.path.join(upload_dir, new_filename)
+                        if os.path.exists(src_path):
+                            shutil.copy2(src_path, dst_path)
+                        new_local_image_path = f"uploads/{new_filename}"
+
+                    new_cc = CustomCard(
+                        uuid=new_uuid,
+                        name=original_cc.name,
+                        local_image_path=new_local_image_path,
+                        mana_cost=original_cc.mana_cost,
+                        type_line=original_cc.type_line,
+                        text_box=original_cc.text_box,
+                        power=original_cc.power,
+                        toughness=original_cc.toughness,
+                        user_id=current_user.id
+                    )
+                    db.session.add(new_cc)
+                    db.session.flush()
+                    new_custom_card_id = new_cc.id
+                    new_image_url = new_local_image_path
+                    custom_card_map[card.custom_card_id] = new_cc
+
         db.session.add(Card(
             name=card.name,
             scryfall_id=card.scryfall_id,
-            image_url=card.image_url,
+            image_url=new_image_url,
             mana_cost=card.mana_cost,
             type_line=card.type_line,
             text_box=card.text_box,
+            power=card.power,
+            toughness=card.toughness,
+            custom_card_id=new_custom_card_id,
             cube_id=new_cube.id
         ))
+
     db.session.commit()
     flash(f'"{source.name}" has been copied to your collection.', 'success')
     return redirect(url_for('main.dashboard'))
