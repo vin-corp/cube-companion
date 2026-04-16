@@ -27,7 +27,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        return redirect(url_for("auth.login"))
+        login_user(user)
+        return redirect(url_for("main.dashboard"))
 
     return render_template("register.html")
 
@@ -50,6 +51,8 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for("main.dashboard"))
+
+        flash("Invalid username or password.", "error")
 
     return render_template("login.html")
 

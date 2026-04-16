@@ -25,7 +25,11 @@
     {% for card in cards %}
     <div class="card">
         {% if card.image_url %}
-        <img src="{{ card.image_url }}" alt="{{ card.name }}">
+            {% if card.custom_card_id %}
+                <img src="{{ url_for('static', filename=card.image_url) }}" alt="{{ card.name }}">
+            {% else %}
+                <img src="{{ card.image_url }}" alt="{{ card.name }}">
+            {% endif %}
         {% endif %}
         <div class="card-content">
             <div class="card-title">{{ card.name }}</div>
