@@ -495,3 +495,358 @@ a:hover { text-decoration: underline; }
     87.5% { opacity: 1; }
     100% { opacity: 0; }
 }
+
+/* ── Custom Cards ── */
+.card-entry-layout {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        align-items: flex-start;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .card-media-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+
+    .card-uploader-outline {
+        width: 350px;
+        height: 490px;
+        background-color: #12151d;
+        border: 12px solid #5a5a58;
+        border-radius: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-uploader-outline:hover {
+        border-color: #ffd700;
+        transform: translateY(-2px);
+    }
+
+    .card-uploader-outline .upload-text {
+        color: #5a5a58;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    #imagePreview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .delete-link {
+        color: #c0392b;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+
+    .delete-link:hover {
+        color: #e74c3c;
+        text-decoration: underline;
+    }
+
+    .card-form-container {
+        background-color: #1a1f2b;
+        padding: 30px;
+        border-radius: 8px;
+        flex: 1;
+        max-width: 650px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .card-entry-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .card-entry-group label {
+        color: #ffd700;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .card-entry-group input,
+    .card-entry-group textarea {
+        background-color: #ffffe0;
+        color: #0d0f14;
+        border: none;
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 1rem;
+        font-family: inherit;
+        outline: none;
+        width: 100%;
+        transition: box-shadow 0.2s;
+    }
+
+    .card-entry-group input:focus,
+    .card-entry-group textarea:focus {
+        box-shadow: 0 0 0 2px #ffd700;
+    }
+
+    .card-entry-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .btn-green-upload {
+        background-color: #00c800;
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        height: 100%; 
+        min-height: 44px;
+        transition: opacity 0.2s, background-color 0.2s;
+    }
+
+    .btn-green-upload:hover {
+        background-color: #00aa00;
+    }
+
+    /* ── Custom Cards Dashboard ── */
+.custom-cards-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Search Bar */
+.search-bar-container {
+    background: #1a1f2b;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    gap: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.search-bar-container input {
+    flex-grow: 1;
+    background: #fffde7; /* Matches the pale yellow input in mockup */
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    color: #000;
+    outline: none;
+}
+
+.btn-green-search {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-green-search:hover {
+    opacity: 0.9;
+}
+
+/* Main Cards Container */
+.custom-cards-box {
+    background: #1a1f2b;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.card-divider {
+    border: none;
+    border-top: 2px solid #2a2f3d;
+    margin: 0;
+}
+
+/* Individual Card Layout */
+.list-card {
+    display: flex;
+    gap: 25px;
+    height: 320px; /* Fixed height to enforce scrolling on long text */
+}
+
+/* Card Image */
+.list-card-img {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.list-card-img img {
+    width: 220px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    object-fit: cover;
+}
+
+.img-placeholder {
+    width: 220px;
+    height: 308px;
+    background: #0d0f14;
+    border: 2px dashed #4a5568;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568;
+}
+
+/* Card Content Area */
+.list-card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents flex blowout */
+}
+
+.list-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid #4a5568;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.list-card-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.list-card-mana {
+    font-size: 1.8rem;
+    color: #ffffff;
+}
+
+.list-card-subheader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    color: #b0b8c1;
+    margin-bottom: 15px;
+}
+
+/* Rules Text with Custom Scrollbar */
+.list-card-text {
+    flex-grow: 1;
+    color: #e6e6e6;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    white-space: pre-line; /* Preserves line breaks from textarea */
+    overflow-y: auto;
+    padding-right: 15px; /* Room for scrollbar */
+}
+
+.list-card-text::-webkit-scrollbar {
+    width: 8px;
+}
+
+.list-card-text::-webkit-scrollbar-track {
+    background: #0d0f14;
+    border-radius: 4px;
+}
+
+.list-card-text::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 4px;
+}
+
+/* Card Footer & Buttons */
+.list-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.list-card-cubes {
+    color: #4a5568;
+    font-size: 0.9rem;
+    max-width: 40%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-card-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.cube-modal {
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 20px;
+        width: 400px;
+        max-width: 90%;
+        background-color: #2d2d2d;
+        color: #eaeaea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        
+        margin: 0;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .cube-modal::backdrop {
+        background-color: rgba(0, 0, 0, 0.75);
+    }
+    .cube-enrollment-list {
+        max-height: 250px;
+        overflow-y: auto;
+        margin: 15px 0;
+        background: #1a1a1a;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 10px;
+    }
+    .cube-enrollment-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #444;
+        color: #eaeaea;
+    }
+    .cube-enrollment-list-item:last-child {
+        border-bottom: none;
+    }

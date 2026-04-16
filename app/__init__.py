@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_migrate import Migrate
 from .extensions import db, login_manager
 from .auth import auth
 from .routes import main
@@ -13,5 +14,7 @@ def create_app():
 
     app.register_blueprint(auth)
     app.register_blueprint(main)
+
+    migrate = Migrate(app, db)
 
     return app

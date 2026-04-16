@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Add Card - Cube Companion{% endblock %}
+
+{% block content %}
+
+<form class="card-entry-layout" method="POST" 
+      action="{% if editMode %}{{ url_for('main.edit_card', card_id=card_id) }}{% else %}{{ url_for('main.create_card') }}{% endif %}" 
+      enctype="multipart/form-data">
+         
+    <div class="card-media-container">
+        <div class="card-uploader-outline" onclick="document.getElementById('cardImage').click()">
+            <input type="file" id="cardImage" name="cardImage" accept="image/*" style="display: none;" onchange="previewImage(event)">
+            
+            <span class="upload-text" id="uploadText" {% if local_image_path %}style="display: none;"{% endif %}>Upload Image</span>
+            
+            <img id="imagePreview" 
+                alt="Card Preview" 
+                {% if local_image_path %}
+                    src="{{ url_for('static', filename=local_image_path) }}" 
+                {% else %}
+                    src="" 
+                    style="display: none;"
+                {% endif %}>
+        </div>
+        
+       <a href="#" 
+           id="deleteImageLink" 
+           class="delete-link" 
+           onclick="clearImage(event)"
+           {% if not local_image_path %} style="display: none;" {% endif %}>
+           Delete Image
+        </a>
+    </div>
+
+    <div class="card-form-container">
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="cardName">Name</label>
+                <input type="text" name="cardName" value="{{ name | default('') }}">
+            </div>
+            <div class="card-entry-group">
+                <label for="manaCost">Mana Cost</label>
+                <input type="text" name="manaCost" value="{{ mana_cost | default('') }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="typeLine">Type Line</label>
+                <input type="text" name="typeLine" value="{{ type_line | default('') }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="rulesText">Rules Text</label>
+                <textarea name="rulesText">{{ rules_text | default('') }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="card-entry-group">
+                <label for="power">Power</label>
+                <input type="text" name="power" value="{{ power | default('') }}">
+            </div>
+            <div class="card-entry-group">
+                <label for="toughness">Toughness</label>
+                <input type="text" name="toughness" value="{{ toughness | default('') }}">
+            </div>
+            <div class="card-entry-group">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn-green-upload">
+                    {% if editMode %}Save{% else %}Upload{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                
+                // Toggle visibility
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('uploadText').style.display = 'none';
+                document.getElementById('deleteImageLink').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function clearImage(event) {
+        event.preventDefault();
+        
+        document.getElementById('cardImage').value = '';
+        
+        document.getElementById('imagePreview').src = '';
+        
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('uploadText').style.display = 'block';
+        document.getElementById('deleteImageLink').style.display = 'none';
+    }
+</script>
+{% endblock %}
