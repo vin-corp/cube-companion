@@ -279,12 +279,61 @@ def copy_shared_cube(share_id):
     return redirect(url_for('main.dashboard'))
 
 
-"""
-@app.route('/share/card/<share_id>')
-def shared_card(share_id):
-    card = CustomCard.query.filter_by(share_id=uuid).first_or_404()
+@main.route('/card/<int:card_id>/share')
+@login_required
+def share_card(card_id):
+    card = CustomCard.query.get_or_404(card_id)
+    if card.user_id != current_user.id:
+        abort(403)
+    share_url = url_for('main.shared_card', card_uuid=card.uuid, _external=True)
+    return redirect(url_for('main.my_cards', share_url=share_url, shared_card_id=card_id))
+
+
+@main.route('/shared/card/<card_uuid>')
+def shared_card(card_uuid):
+    card = CustomCard.query.filter_by(uuid=card_uuid).first_or_404()
     return render_template('shared_card.html', card=card)
-"""
+
+
+@main.route('/shared/card/<card_uuid>/add', methods=['POST'])
+@login_required
+def add_shared_card(card_uuid):
+    original = CustomCard.query.filter_by(uuid=card_uuid).first_or_404()
+    
+    existing = CustomCard.query.filter_by(name=original.name, user_id=current_user.id).first()
+    if existing:
+        flash(f'You already have a card named "{original.name}" in your collection.', 'error')
+        return redirect(url_for('main.shared_card', card_uuid=card_uuid))
+    
+    new_uuid = str(uuid.uuid4())
+    new_local_image_path = None
+
+    if original.local_image_path:
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        _, ext = os.path.splitext(original.local_image_path)
+        new_filename = f"{new_uuid}{ext}"
+        src_path = os.path.join(current_app.root_path, 'static', original.local_image_path)
+        dst_path = os.path.join(upload_dir, new_filename)
+        if os.path.exists(src_path):
+            shutil.copy2(src_path, dst_path)
+        new_local_image_path = f"uploads/{new_filename}"
+
+    new_card = CustomCard(
+        uuid=new_uuid,
+        name=original.name,
+        local_image_path=new_local_image_path,
+        mana_cost=original.mana_cost,
+        type_line=original.type_line,
+        text_box=original.text_box,
+        power=original.power,
+        toughness=original.toughness,
+        user_id=current_user.id
+    )
+    db.session.add(new_card)
+    db.session.commit()
+    flash(f'"{original.name}" has been added to your custom cards!', 'success')
+    return redirect(url_for('main.my_cards'))
 
 @main.route('/create_card', methods=['GET', 'POST'])
 @login_required

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ card.name }} - Shared Card{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>{{ card.name }}</h1>
+        <p class="dashboard-subtitle">Shared custom card by <strong>{{ card.creator.username }}</strong></p>
+    </div>
+    {% if current_user.is_authenticated %}
+    <form method="POST" action="{{ url_for('main.add_shared_card', card_uuid=card.uuid) }}">
+        <button type="submit" class="btn btn-primary">Add to My Cards</button>
+    </form>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Log in to Add</a>
+    {% endif %}
+</div>
+
+<div class="card-container">
+    <div class="card">
+        {% if card.local_image_path %}
+        <img src="{{ url_for('static', filename=card.local_image_path) }}" alt="{{ card.name }}">
+        {% endif %}
+        <div class="card-content">
+            <div class="card-title">{{ card.name }}</div>
+            {% if card.mana_cost %}
+            <div class="card-mana">{{ card.mana_cost }}</div>
+            {% endif %}
+            {% if card.type_line %}
+            <div class="card-type">{{ card.type_line }}</div>
+            {% endif %}
+            {% if card.text_box %}
+            <div class="card-text">{{ card.text_box }}</div>
+            {% endif %}
+            {% if card.power or card.toughness %}
+            <div class="card-footer">{{ card.power }}/{{ card.toughness }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
