@@ -15,6 +15,6 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(main)
 
-    migrate = Migrate(app, db)
+    migrate =Migrate(app,db)
 
     return app

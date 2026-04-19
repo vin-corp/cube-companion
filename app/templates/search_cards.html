@@ -28,23 +28,68 @@
          data-name="{{ card.name }}"
          data-scryfall-id="{{ card.id }}"
          data-image-url="{{ card.image_uris.normal if card.image_uris else '' }}"
+         data-layout="{{ card.layout or '' }}"
          data-mana-cost="{{ card.mana_cost or '' }}"
          data-type-line="{{ card.type_line or '' }}"
-         data-text-box="{{ card.oracle_text or '' }}">
-        {% if card.image_uris and card.image_uris.normal %}
-            <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
-        {% else %}
-            <div class="no-image">No Image Available</div>
-        {% endif %}
+         data-text-box="{{ card.oracle_text or '' }}"
+         data-card-faces='{{ card.card_faces | tojson if card.card_faces else "[]" }}'
+         {% if card.layout in ['modal_dfc', 'transform'] and card.card_faces %}
+         data-front-face-image="{{ card.card_faces[0].image_uris.normal if card.card_faces[0].image_uris else '' }}"
+         data-back-face-image="{{ card.card_faces[1].image_uris.normal if card.card_faces[1].image_uris else '' }}"
+         {% endif %}>
+        <div class="card-image-container">
+            {% if card.card_faces and card.layout in ['modal_dfc', 'transform'] %}
+                <!-- Dual-faced card: use front face image -->
+                {% if card.card_faces[0].image_uris and card.card_faces[0].image_uris.normal %}
+                    <img src="{{ card.card_faces[0].image_uris.normal }}" alt="{{ card.name }}" class="card-image">
+                {% else %}
+                    <div class="no-image">No Image Available</div>
+                {% endif %}
+            {% elif card.image_uris and card.image_uris.normal %}
+                <!-- Single-faced card -->
+                <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}" class="card-image">
+            {% else %}
+                <div class="no-image">No Image Available</div>
+            {% endif %}
+            {% if card.layout in ['modal_dfc', 'transform'] and card.card_faces %}
+                <button type="button" class="btn-flip-face" title="View other side" aria-label="Switch card face"></button>
+            {% endif %}
+        </div>
         <div class="card-content">
-            <div class="card-title">{{ card.name }}</div>
-            {% if card.mana_cost %}
-            <div class="card-mana">{{ card.mana_cost }}</div>
-            {% endif %}
-            <div class="card-type">{{ card.type_line }}</div>
-            {% if card.oracle_text %}
-            <div class="card-text">{{ card.oracle_text }}</div>
-            {% endif %}
+            <div class="card-text-container">
+                {% if card.card_faces %}
+                    <!-- Double-faced card: display each face -->
+                    {% for face in card.card_faces %}
+                    <div class="card-face">
+                        <div class="card-title">{{ face.name }}</div>
+                        {% if face.mana_cost %}
+                        <div class="card-mana">{{ face.mana_cost }}</div>
+                        {% endif %}
+                        <div class="card-type">{{ face.type_line }}</div>
+                        {% if face.oracle_text %}
+                        <div class="card-text">{{ face.oracle_text }}</div>
+                        {% endif %}
+                        {% if face.power and face.toughness %}
+                        <div class="card-pt">{{ face.power }}/{{ face.toughness }}</div>
+                        {% endif %}
+                    </div>
+                    {% if not loop.last %}<hr class="face-separator">{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <!-- Single-faced card -->
+                    <div class="card-title">{{ card.name }}</div>
+                    {% if card.mana_cost %}
+                    <div class="card-mana">{{ card.mana_cost }}</div>
+                    {% endif %}
+                    <div class="card-type">{{ card.type_line }}</div>
+                    {% if card.oracle_text %}
+                    <div class="card-text">{{ card.oracle_text }}</div>
+                    {% endif %}
+                    {% if card.power and card.toughness %}
+                    <div class="card-pt">{{ card.power }}/{{ card.toughness }}</div>
+                    {% endif %}
+                {% endif %}
+            </div>
             {% set db_id = existing.get(card.id) %}
             <button type="button" class="btn-add-card"
                 {% if db_id %}
@@ -66,6 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cardContainer) return;
 
     cardContainer.addEventListener('click', (e) => {
+        // Handle flip button for dual-face cards
+        const flipButton = e.target.closest('.btn-flip-face');
+        if (flipButton) {
+            e.stopPropagation();
+            handleCardFlip(flipButton);
+            return;
+        }
+
+        // Handle add/remove card button
         const addButton = e.target.closest('.btn-add-card');
         if (!addButton) return;
 
@@ -74,10 +128,20 @@ document.addEventListener('DOMContentLoaded', () => {
             name: card.dataset.name,
             scryfall_id: card.dataset.scryfallId,
             image_url: card.dataset.imageUrl,
+            layout: card.dataset.layout,
             mana_cost: card.dataset.manaCost,
             type_line: card.dataset.typeLine,
             text_box: card.dataset.textBox
         };
+
+        const cardFacesData = card.dataset.cardFaces;
+        if (cardFacesData && cardFacesData !== '[]') {
+            try {
+                cardData.card_faces = JSON.parse(cardFacesData);
+            } catch (error) {
+                console.error('Unable to parse card_faces JSON', error);
+            }
+        }
 
         if (addButton.dataset.state === 'added') {
             performRemove(cardData, addButton);
@@ -86,6 +150,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function handleCardFlip(flipButton) {
+    const card = flipButton.closest('.card');
+    const img = card.querySelector('.card-image');
+    if (!img) return;
+
+    const isFlipped = flipButton.dataset.flipped === 'true';
+    const frontImage = card.dataset.frontFaceImage || card.dataset.imageUrl;
+    const backImage = card.dataset.backFaceImage;
+
+    if (isFlipped) {
+        // Show front face
+        img.src = frontImage;
+        flipButton.dataset.flipped = 'false';
+    } else {
+        // Show back face
+        img.src = backImage;
+        flipButton.dataset.flipped = 'true';
+    }
+}
 
 function performAdd(cardData, buttonElement = null) {
     if (buttonElement) {
