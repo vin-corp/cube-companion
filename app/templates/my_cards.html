@@ -48,6 +48,7 @@
                             Part of cubes: Cube 1, Cube 2...
                         </div>
                         <div class="list-card-actions">
+                            <a href="{{ url_for('main.share_card', card_id=card.id) }}" class="btn btn-secondary">Share Card</a>
                             <form method="POST" action="{{ url_for('main.delete_custom_card', card_id=card.id) }}" style="display: inline;">
                                 <button type="submit" 
                                         class="btn btn-danger" 
@@ -130,6 +131,15 @@
 
         document.getElementById('cubeModal').showModal();
     }
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareUrl = urlParams.get('share_url');
+    const sharedCardId = urlParams.get('shared_card_id');
+    if (shareUrl && sharedCardId) {
+        navigator.clipboard.writeText(shareUrl).catch(() => {});
+        alert('Share link copied to clipboard!\n\n' + shareUrl);
+        history.replaceState({}, '', window.location.pathname);
+    }
+
 </script>
 
 {% endblock %}
