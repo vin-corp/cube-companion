@@ -577,3 +577,42 @@ a:hover { text-decoration: underline; }
     border-top: 1px solid #2a2f3d;
     margin: 10px 0;
 }
+
+/*-- mobile improvments*/
+@media (max-width: 600px) {
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-content {
+        flex: 1;
+        display: flex;
+        align-items: center;     
+        justify-content: center; 
+        padding: 20px 16px;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 420px;
+        margin: 0;               
+        padding: 24px 18px;      
+        border-radius: 10px;
+    }
+
+    .form-title {
+        font-size: 1.5rem;
+    }
+
+    .form-group input {
+        font-size: 16px; 
+        padding: 12px;
+    }
+
+    .btn {
+        padding: 12px;
+    }
+}
