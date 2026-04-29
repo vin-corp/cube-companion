@@ -75,6 +75,9 @@
                     {% endif %}
                 {% endif %}
             </div>
+            {% if card.scryfall_id and not card.custom_card_id %}
+            <button type="button" class="btn-change-art" data-card-id="{{ card.id }}">Change Art</button>
+            {% endif %}
             <button type="button" class="btn-remove-card">Remove from Cube</button>
         </div>
     </div>
@@ -116,6 +119,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Handle change art button
+        const changeArtButton = e.target.closest('.btn-change-art');
+        if (changeArtButton) {
+            const card = changeArtButton.closest('.card');
+            const cardId = card.dataset.cardId;
+            openChangeArtModal(cardId);
+            return;
+        }
+
+        // Handle remove card button
         const removeButton = e.target.closest('.btn-remove-card');
         if (!removeButton) return;
 
@@ -170,6 +183,248 @@ function handleCardFlip(flipButton) {
         flipButton.dataset.flipped = 'true';
     }
 }
+
+// Modal for changing art
+let currentCardId = null;
+
+function openChangeArtModal(cardId) {
+    console.log('openChangeArtModal called with cardId:', cardId);
+    currentCardId = cardId;
+    const modal = document.getElementById('changeArtModal');
+    const modalContent = document.getElementById('changeArtContent');
+    modalContent.innerHTML = '<p>Loading...</p>';
+    modal.style.display = 'block';
+
+    // Fetch alternate arts
+    fetch(`/cube/{{ cube.id }}/card/${cardId}/alternates`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Fetched alternates:', data);
+            if (data.alternates && data.alternates.length > 0) {
+                let html = '<div id="changeArtOptions">';
+                data.alternates.forEach((alt, index) => {
+                    const isCurrent = alt.id === data.current_scryfall_id;
+                    const hasFaces = Array.isArray(alt.card_faces) && alt.card_faces.length >= 2;
+                    const frontImage = hasFaces ? (alt.card_faces[0].image_uris?.normal || '') : (alt.image_uris?.normal || '');
+                    const backImage = hasFaces ? (alt.card_faces[1].image_uris?.normal || '') : '';
+                    html += `
+                        <div class="art-option" data-front-image="${frontImage}" data-back-image="${backImage}">
+                            <div class="art-image-container">
+                                <img src="${frontImage}" alt="${alt.name}" class="art-thumb">
+                                ${hasFaces ? `<button type="button" class="btn-flip-face modal-flip-button" data-state="front" aria-label="Flip card face"></button>` : ''}
+                            </div>
+                            <div class="set-name" title="${alt.set_name} (${alt.set})">${alt.set_name} (${alt.set})</div>
+                            <button type="button" class="btn-select-art" data-scryfall-id="${alt.id}" ${isCurrent ? 'disabled' : ''}>
+                                ${isCurrent ? 'Current' : 'Select'}
+                            </button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                modalContent.innerHTML = html;
+
+                document.querySelectorAll('.modal-flip-button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const option = this.closest('.art-option');
+                        const img = option.querySelector('.art-thumb');
+                        const frontImage = option.dataset.frontImage;
+                        const backImage = option.dataset.backImage;
+                        const isFront = this.dataset.state === 'front';
+                        if (isFront) {
+                            img.src = backImage || frontImage;
+                            this.dataset.state = 'back';
+                        } else {
+                            img.src = frontImage;
+                            this.dataset.state = 'front';
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.btn-select-art').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const selectedId = this.dataset.scryfallId;
+                        updateCardArt(cardId, selectedId);
+                    });
+                });
+            } else {
+                modalContent.innerHTML = '<p>No alternate versions found.</p>';
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            modalContent.innerHTML = '<p>Error loading alternate arts.</p>';
+        });
+}
+
+function updateCardArt(cardId, scryfallId) {
+    fetch(`/cube/{{ cube.id }}/card/${cardId}/update_art`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scryfall_id: scryfallId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`Art updated successfully!`);
+            // Update the card image on the page
+            const card = document.querySelector(`.card[data-card-id="${cardId}"]`);
+            if (card) {
+                const img = card.querySelector('.card-image');
+                if (img && data.new_image_url) {
+                    img.src = data.new_image_url;
+                }
+            }
+            document.getElementById('changeArtModal').style.display = 'none';
+        } else {
+            showToast(data.error || 'Error updating art.');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showToast('Error updating art.');
+    });
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('changeArtModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
 </script>
+
+<!-- Change Art Modal -->
+<div id="changeArtModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('changeArtModal').style.display='none'">&times;</span>
+        <h2>Change Art</h2>
+        <div id="changeArtContent">
+            <p>Loading...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #1a1f2b;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #e6e6e6;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #ffd700;
+}
+
+.art-option {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
+    width: 130px;
+    position: relative;
+}
+
+.art-option .set-name {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+    color: #b0b8c1;
+    margin-top: 5px;
+    transition: all 0.2s ease;
+}
+
+.art-option .set-name:hover {
+    white-space: normal;
+    overflow: visible;
+    background-color: #2a2f3d;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.btn-select-art {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-select-art:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.btn-select-art:disabled {
+    background-color: #7f8c8d;
+    cursor: not-allowed;
+}
+
+.art-image-container {
+    position: relative;
+    display: inline-block;
+}
+
+.art-thumb {
+    display: block;
+    width: 100px;
+    height: auto;
+    border: 2px solid transparent;
+}
+
+.btn-flip-option {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    cursor: pointer;
+}
+
+.btn-flip-option:hover {
+    background-color: rgba(0, 0, 0, 0.9);
+}
+
+.art-option img {
+    border: 2px solid transparent;
+}
+</style>
 
 {% endblock %}
