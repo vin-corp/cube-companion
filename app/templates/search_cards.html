@@ -28,25 +28,76 @@
          data-name="{{ card.name }}"
          data-scryfall-id="{{ card.id }}"
          data-image-url="{{ card.image_uris.normal if card.image_uris else '' }}"
+         data-layout="{{ card.layout or '' }}"
          data-mana-cost="{{ card.mana_cost or '' }}"
          data-type-line="{{ card.type_line or '' }}"
-         data-text-box="{{ card.oracle_text or '' }}">
-        {% if card.image_uris and card.image_uris.normal %}
-            <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}">
-        {% else %}
-            <div class="no-image">No Image Available</div>
-        {% endif %}
+         data-text-box="{{ card.oracle_text or '' }}"
+         data-card-faces='{{ card.card_faces | tojson if card.card_faces else "[]" }}'
+         {% if card.layout in ['modal_dfc', 'transform'] and card.card_faces %}
+         data-front-face-image="{{ card.card_faces[0].image_uris.normal if card.card_faces[0].image_uris else '' }}"
+         data-back-face-image="{{ card.card_faces[1].image_uris.normal if card.card_faces[1].image_uris else '' }}"
+         {% endif %}>
+        <div class="card-image-container">
+            {% if card.card_faces and card.layout in ['modal_dfc', 'transform'] %}
+                <!-- Dual-faced card: use front face image -->
+                {% if card.card_faces[0].image_uris and card.card_faces[0].image_uris.normal %}
+                    <img src="{{ card.card_faces[0].image_uris.normal }}" alt="{{ card.name }}" class="card-image">
+                {% else %}
+                    <div class="no-image">No Image Available</div>
+                {% endif %}
+            {% elif card.image_uris and card.image_uris.normal %}
+                <!-- Single-faced card -->
+                <img src="{{ card.image_uris.normal }}" alt="{{ card.name }}" class="card-image">
+            {% else %}
+                <div class="no-image">No Image Available</div>
+            {% endif %}
+            {% if card.layout in ['modal_dfc', 'transform'] and card.card_faces %}
+                <button type="button" class="btn-flip-face" title="View other side" aria-label="Switch card face"></button>
+            {% endif %}
+        </div>
         <div class="card-content">
-            <div class="card-title">{{ card.name }}</div>
-            {% if card.mana_cost %}
-            <div class="card-mana">{{ card.mana_cost }}</div>
-            {% endif %}
-            <div class="card-type">{{ card.type_line }}</div>
-            {% if card.oracle_text %}
-            <div class="card-text">{{ card.oracle_text }}</div>
-            {% endif %}
-            <button type="button" class="btn-add-card">
-                Add to Cube
+            <div class="card-text-container">
+                {% if card.card_faces %}
+                    <!-- Double-faced card: display each face -->
+                    {% for face in card.card_faces %}
+                    <div class="card-face">
+                        <div class="card-title">{{ face.name }}</div>
+                        {% if face.mana_cost %}
+                        <div class="card-mana">{{ face.mana_cost }}</div>
+                        {% endif %}
+                        <div class="card-type">{{ face.type_line }}</div>
+                        {% if face.oracle_text %}
+                        <div class="card-text">{{ face.oracle_text }}</div>
+                        {% endif %}
+                        {% if face.power and face.toughness %}
+                        <div class="card-pt">{{ face.power }}/{{ face.toughness }}</div>
+                        {% endif %}
+                    </div>
+                    {% if not loop.last %}<hr class="face-separator">{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <!-- Single-faced card -->
+                    <div class="card-title">{{ card.name }}</div>
+                    {% if card.mana_cost %}
+                    <div class="card-mana">{{ card.mana_cost }}</div>
+                    {% endif %}
+                    <div class="card-type">{{ card.type_line }}</div>
+                    {% if card.oracle_text %}
+                    <div class="card-text">{{ card.oracle_text }}</div>
+                    {% endif %}
+                    {% if card.power and card.toughness %}
+                    <div class="card-pt">{{ card.power }}/{{ card.toughness }}</div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% set db_id = existing.get(card.id) %}
+            <button type="button" class="btn-add-card"
+                {% if db_id %}
+                data-state="added"
+                data-card-db-id="{{ db_id }}"
+                style="background-color: #c0392b;"
+                {% endif %}>
+                {{ 'Remove from Cube' if db_id else 'Add to Cube' }}
             </button>
         </div>
     </div>
@@ -54,68 +105,73 @@
 </div>
 {% endif %}
 
-<button type="button" id="floatingAddBtn" class="card-action-button">Add to Cube</button>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const cardContainer = document.querySelector('.card-container');
-    const floatingBtn = document.getElementById('floatingAddBtn');
-    let selectedCardData = null;
+    if (!cardContainer) return;
 
-    if (cardContainer) {
-        cardContainer.addEventListener('click', (e) => {
-            const card = e.target.closest('.card');
-            if (!card) return;
-
-            const cardData = {
-                name: card.dataset.name,
-                scryfall_id: card.dataset.scryfallId,
-                image_url: card.dataset.imageUrl,
-                mana_cost: card.dataset.manaCost,
-                type_line: card.dataset.typeLine,
-                text_box: card.dataset.textBox
-            };
-
-            const addButton = e.target.closest('.btn-add-card');
-            if (addButton) {
-                e.stopPropagation();
-                floatingBtn.style.display = 'none';
-                performAdd(cardData, addButton);
-                return;
-            }
-
-            // If they click anywhere else on the card show floating button
-            selectedCardData = cardData;
-            floatingBtn.style.left = e.pageX + 'px';
-            floatingBtn.style.top = e.pageY + 'px';
-            floatingBtn.style.display = 'block';
+    cardContainer.addEventListener('click', (e) => {
+        // Handle flip button for dual-face cards
+        const flipButton = e.target.closest('.btn-flip-face');
+        if (flipButton) {
             e.stopPropagation();
-        });
-    }
-
-    document.addEventListener('click', (e) => {
-        if (e.target !== floatingBtn) {
-            floatingBtn.style.display = 'none';
+            handleCardFlip(flipButton);
+            return;
         }
-    });
 
-    // floating button click
-    floatingBtn.addEventListener('click', () => {
-        if (selectedCardData) {
-            performAdd(selectedCardData);
-            floatingBtn.style.display = 'none';
+        // Handle add/remove card button
+        const addButton = e.target.closest('.btn-add-card');
+        if (!addButton) return;
+
+        const card = addButton.closest('.card');
+        const cardData = {
+            name: card.dataset.name,
+            scryfall_id: card.dataset.scryfallId,
+            image_url: card.dataset.imageUrl,
+            layout: card.dataset.layout,
+            mana_cost: card.dataset.manaCost,
+            type_line: card.dataset.typeLine,
+            text_box: card.dataset.textBox
+        };
+
+        const cardFacesData = card.dataset.cardFaces;
+        if (cardFacesData && cardFacesData !== '[]') {
+            try {
+                cardData.card_faces = JSON.parse(cardFacesData);
+            } catch (error) {
+                console.error('Unable to parse card_faces JSON', error);
+            }
         }
-    });
 
-    // Formatting mana icons on load
-    document.querySelectorAll('.card-mana').forEach(el => {
-        el.innerHTML = formatMana(el.innerText);
+        if (addButton.dataset.state === 'added') {
+            performRemove(cardData, addButton);
+        } else {
+            performAdd(cardData, addButton);
+        }
     });
 });
 
-// Fetch logic shared by both click types
+function handleCardFlip(flipButton) {
+    const card = flipButton.closest('.card');
+    const img = card.querySelector('.card-image');
+    if (!img) return;
+
+    const isFlipped = flipButton.dataset.flipped === 'true';
+    const frontImage = card.dataset.frontFaceImage || card.dataset.imageUrl;
+    const backImage = card.dataset.backFaceImage;
+
+    if (isFlipped) {
+        // Show front face
+        img.src = frontImage;
+        flipButton.dataset.flipped = 'false';
+    } else {
+        // Show back face
+        img.src = backImage;
+        flipButton.dataset.flipped = 'true';
+    }
+}
+
 function performAdd(cardData, buttonElement = null) {
-    const originalText = buttonElement ? buttonElement.innerText : null;
     if (buttonElement) {
         buttonElement.disabled = true;
         buttonElement.innerText = "Adding...";
@@ -130,13 +186,11 @@ function performAdd(cardData, buttonElement = null) {
     .then(data => {
         showToast(`${cardData.name} added!`);
         if (buttonElement) {
-            buttonElement.innerText = "Added!";
-            buttonElement.style.backgroundColor = "#155724";
-            setTimeout(() => {
-                buttonElement.disabled = false;
-                buttonElement.innerText = originalText;
-                buttonElement.style.backgroundColor = "";
-            }, 2000);
+            buttonElement.disabled = false;
+            buttonElement.innerText = "Remove from Cube";
+            buttonElement.style.backgroundColor = "#c0392b";
+            buttonElement.dataset.state = "added";
+            buttonElement.dataset.cardDbId = data.card_id;
         }
     })
     .catch(err => {
@@ -144,30 +198,39 @@ function performAdd(cardData, buttonElement = null) {
         showToast("Error adding card.");
         if (buttonElement) {
             buttonElement.disabled = false;
-            buttonElement.innerText = originalText;
+            buttonElement.innerText = "Add to Cube";
         }
     });
 }
 
-</script>
+function performRemove(cardData, buttonElement) {
+    buttonElement.disabled = true;
+    buttonElement.innerText = "Removing...";
 
-<script>
-// helper to turn {W}{U} into icons
-function formatMana(manaStr) {
-    if (!manaStr) return "";
-    return manaStr.replace(/{(.*?)}/g, (match, symbol) => {
-        const s = symbol.replace("/", "").toUpperCase(); 
-        return `<img src="https://svgs.scryfall.io/card-symbols/${s}.svg" class="mana-symbol" alt="${s}">`;
+    fetch(`/cube/{{ cube.id }}/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ card_id: parseInt(buttonElement.dataset.cardDbId) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showToast(`${cardData.name} removed!`);
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Add to Cube";
+        buttonElement.style.backgroundColor = "";
+        delete buttonElement.dataset.state;
+        delete buttonElement.dataset.cardDbId;
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showToast("Error removing card.");
+        buttonElement.disabled = false;
+        buttonElement.innerText = "Remove from Cube";
     });
 }
 
-// Apply the mana icons to the page
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.card-mana').forEach(el => {
-        el.innerHTML = formatMana(el.innerText);
-    });
-});
 </script>
+
 
 {% endblock %}
 
