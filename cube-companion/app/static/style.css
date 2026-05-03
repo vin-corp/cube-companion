@@ -1,0 +1,971 @@
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0d0f14;
+    color: #e6e6e6;
+    min-height: 100vh;
+}
+
+a { color: #ffd700; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Navbar ── */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 32px;
+    background-color: #12151d;
+    border-bottom: 1px solid #2a2f3d;
+}
+
+.nav-brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffd700;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 0.95rem;
+}
+
+.nav-links a {
+    color: #b0b8c1;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover { color: #ffd700; text-decoration: none; }
+
+.nav-user {
+    color: #ffd700;
+    font-weight: 600;
+}
+
+/* ── Main Content ── */
+.main-content {
+    padding: 40px 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ── Hero ── */
+.hero {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 16px;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: #b0b8c1;
+    margin-bottom: 40px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    text-decoration: none;
+}
+
+.btn:hover { opacity: 0.88; transform: translateY(-1px); text-decoration: none; }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    background-color: #ffd700;
+    color: #0d0f14;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #ffd700;
+    border: 2px solid #ffd700;
+}
+
+.btn-full { width: 100%; text-align: center; }
+
+/* ── Auth Forms ── */
+.form-container {
+    max-width: 420px;
+    margin: 60px auto;
+    background: #1a1f2b;
+    border-radius: 14px;
+    padding: 40px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.form-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 6px;
+}
+
+.form-subtitle {
+    color: #8fa1b3;
+    margin-bottom: 28px;
+    font-size: 0.95rem;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 18px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.form-group label {
+    font-size: 0.9rem;
+    color: #b0b8c1;
+    font-weight: 500;
+}
+
+.form-group input {
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #e6e6e6;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.form-group input:focus { border-color: #ffd700; }
+.form-group input::placeholder { color: #4a5568; }
+
+.form-footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #8fa1b3;
+}
+
+/* ── Textarea ── */
+.form-group textarea {
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #e6e6e6;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.form-group textarea:focus { border-color: #ffd700; }
+.form-group textarea::placeholder { color: #4a5568; }
+
+.label-optional { color: #4a5568; font-size: 0.82rem; }
+
+/* ── Dashboard ── */
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    color: #ffd700;
+    margin-bottom: 4px;
+}
+
+.dashboard-subtitle { color: #8fa1b3; }
+
+/* ── Cube List ── */
+.cube-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.cube-card {
+    background: #1a1f2b;
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    height: auto;
+    flex-direction: column;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    flex: 1 1 350px;
+    max-width: 100%;
+    padding-bottom: 20px;
+}
+
+.cube-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.cube-share-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #2a2f3d;
+    flex-wrap: wrap;
+}
+
+.share-link-input {
+    flex: 1;
+    min-width: 200px;
+    background: #0d0f14;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #b0b8c1;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: text;
+}
+
+.cube-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #e6e6e6;
+    margin-bottom: 4px;
+}
+
+.cube-description {
+    color: #8fa1b3;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+
+.cube-meta {
+    font-size: 0.8rem;
+    color: #4a5568;
+}
+
+.cube-card-actions {
+    display: flex;
+    min-width: 280px;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ── Button sizes ── */
+.btn-sm {
+    padding: 7px 16px;
+    font-size: 0.88rem;
+}
+
+.btn-danger {
+    background-color: #c0392b;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover { opacity: 0.88; }
+
+/* ── Empty State ── */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8fa1b3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    font-size: 1rem;
+}
+
+/* ── Card Grid ── */
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #1a1f2b;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+}
+
+.card img { width: 100%; display: block; }
+
+.card-content { 
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    /* Set a fixed height for the content area so all cards look identical */
+    height: 300px;
+ }
+
+.card-text-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+/* Scrollbar for card-text-container */
+.card-text-container::-webkit-scrollbar {
+    width: 6px;
+}
+.card-text-container::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 10px;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* ── Card Mana Symbols ── */
+.card-mana {
+    display: flex;          /* Force horizontal flow */
+    flex-direction: row;    /* Keep icons side-by-side */
+    flex-wrap: nowrap;      /* Stop them from stacking vertically */
+    align-items: center;    /* Align icons with any adjacent text */
+    gap: 4px;               /* Space between icons */
+    margin-bottom: 10px;
+    
+    /* Hide scrollbars while allowing content to fit */
+    overflow: visible;      
+}
+
+.mana-symbol {
+    width: 22px;            /* Consistent size */
+    height: 22px;
+    display: block;         /* Treat as a solid block within the flex row */
+    flex-shrink: 0;         /* Prevent icons from being squished */
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); /* Professional depth */
+}
+
+.card-text {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    flex-grow: 1;
+    overflow-y: auto;       /* Keep vertical scroll for long text */
+    overflow-x: hidden;     /* REMOVE horizontal scrollbars */
+    padding-right: 8px;     /* Space so text doesn't hit the scrollbar */
+    white-space: pre-line;  /* Preserve newlines from Scryfall oracle text */
+}
+
+.card-type {
+    font-size: 0.9rem;
+    color: #b0b8c1;
+    margin-bottom: 10px;
+}
+/* ── Custom Cards ── */
+.card-entry-layout {
+        display: flex;
+        gap: 40px;
+        justify-content: center;
+        align-items: flex-start;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .card-media-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+
+    .card-uploader-outline {
+        width: 350px;
+        height: 490px;
+        background-color: #12151d;
+        border: 12px solid #5a5a58;
+        border-radius: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-uploader-outline:hover {
+        border-color: #ffd700;
+        transform: translateY(-2px);
+    }
+
+    .card-uploader-outline .upload-text {
+        color: #5a5a58;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    #imagePreview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .delete-link {
+        color: #c0392b;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.95rem;
+        text-decoration: none;
+    }
+
+    .delete-link:hover {
+        color: #e74c3c;
+        text-decoration: underline;
+    }
+
+    .card-form-container {
+        background-color: #1a1f2b;
+        padding: 30px;
+        border-radius: 8px;
+        flex: 1;
+        max-width: 650px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+    }
+
+    .card-entry-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .card-entry-group label {
+        color: #ffd700;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .card-entry-group input,
+    .card-entry-group textarea {
+        background-color: #ffffe0;
+        color: #0d0f14;
+        border: none;
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 1rem;
+        font-family: inherit;
+        outline: none;
+        width: 100%;
+        transition: box-shadow 0.2s;
+    }
+
+    .card-entry-group input:focus,
+    .card-entry-group textarea:focus {
+        box-shadow: 0 0 0 2px #ffd700;
+    }
+
+    .card-entry-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .btn-green-upload {
+        background-color: #00c800;
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        height: 100%; 
+        min-height: 44px;
+        transition: opacity 0.2s, background-color 0.2s;
+    }
+
+    .btn-green-upload:hover {
+        background-color: #00aa00;
+    }
+
+    /* ── Custom Cards Dashboard ── */
+.custom-cards-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Search Bar */
+.search-bar-container {
+    background: #1a1f2b;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    gap: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+ /*Dark mode*/
+ .card-text::-webkit-scrollbar {
+    width: 6px;
+}
+.card-text::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 10px;
+}
+
+.card-footer {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #8fa1b3;
+}
+
+
+.card-action-button {
+    position: absolute;
+    background-color: #0D0F14;
+    color: #B0B8C1;
+    border: 2px solid #B0B8C1;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 0;
+    display: none;
+    z-index: 1000;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.card-action-button:hover {
+    background-color: #5e5d5d;
+}
+
+.btn-add-card {
+    flex-shrink: 0;
+    margin-top: auto;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-add-card:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+.btn-remove-card {
+    flex-shrink: 0;
+    margin-top: auto;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-remove-card:hover {
+    background-color: #a93226;
+    transform: scale(1.05);
+}
+
+.btn-remove-card:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.mana-symbol {
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+    vertical-align: middle;
+    /* Give them that slight 'glow' or shadow common in MTG apps */
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5));
+}
+
+/* ── Toast ── */
+.toast-success {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    
+    background-color: rgba(0, 50, 0, 0.85); 
+    border: 2px solid #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    pointer-events: none;
+    animation: toastFade 4s ease-in-out forwards;
+}
+
+.toast-fail {
+    background-color: red;
+    color: white;
+    padding: 10px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    border-radius: 5px;
+    z-index: 9999;
+}
+
+@keyframes toastFade {
+    0% { opacity: 0; }
+    12.5% { opacity: 1; }
+    87.5% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* ── Dual-face card flip button ── */
+.card-image-container {
+    position: relative;
+    overflow: hidden;
+}
+.search-bar-container input {
+    flex-grow: 1;
+    background: #fffde7; /* Matches the pale yellow input in mockup */
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    color: #000;
+    outline: none;
+}
+.card-image {
+    width: 100%;
+    display: block;
+}
+.btn-green-search {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.btn-flip-face {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.65);
+    border: 2px solid #ffd700;
+    border-radius: 50%;
+    color: #ffd700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    padding: 0;
+    font-size: 16px;
+}
+/* Card Content Area */
+.list-card-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents flex blowout */
+}
+.btn-flip-face::before {
+    content: '⇄';
+    display: block;
+}
+
+.btn-flip-face:hover {
+    background-color: rgba(0, 0, 0, 0.85);
+    transform: scale(1.15);
+}
+.list-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid #4a5568;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+.list-card-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+.list-card-mana {
+    font-size: 1.8rem;
+    color: #ffffff;
+}
+
+.list-card-subheader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    color: #b0b8c1;
+    margin-bottom: 15px;
+}
+
+/* Rules Text with Custom Scrollbar */
+.list-card-text {
+    flex-grow: 1;
+    color: #e6e6e6;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    white-space: pre-line; /* Preserves line breaks from textarea */
+    overflow-y: auto;
+    padding-right: 15px; /* Room for scrollbar */
+}
+
+.list-card-text::-webkit-scrollbar {
+    width: 8px;
+}
+
+.list-card-text::-webkit-scrollbar-track {
+    background: #0d0f14;
+    border-radius: 4px;
+}
+
+.list-card-text::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 4px;
+}
+
+/* Card Footer & Buttons */
+.list-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 15px;
+    padding-top: 15px;
+}
+.list-card-cubes {
+    color: #4a5568;
+        max-width: 40%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-card-actions {
+    display: flex;
+    gap: 12px;
+}
+.cube-modal {
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 20px;
+        width: 400px;
+        max-width: 90%;
+        background-color: #2d2d2d;
+        color: #eaeaea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        
+        margin: 0;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .cube-modal::backdrop {
+        background-color: rgba(0, 0, 0, 0.75);
+    }
+    .cube-enrollment-list {
+        max-height: 250px;
+        overflow-y: auto;
+        margin: 15px 0;
+        background: #1a1a1a;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 10px;
+    }
+    .cube-enrollment-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #444;
+        color: #eaeaea;
+    }
+    .cube-enrollment-list-item:last-child {
+        border-bottom: none;
+    }
+.btn-flip-face:active {
+    transform: scale(0.95);
+}
+
+.btn-flip-face[data-flipped="true"] {
+    opacity: 0.7;
+}
+
+/* ── Card Faces ── */
+.card-pt {
+    font-size: 0.9rem;
+    color: #ffd700;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.card-face {
+    margin-bottom: 10px;
+}
+
+.face-separator {
+    border: none;
+    border-top: 1px solid #2a2f3d;
+    margin: 10px 0;
+}
+
+/*-- mobile improvments*/
+@media (max-width: 600px) {
+
+    .dashboard-header {
+        display: flex;
+        flex-direction: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        margin-bottom: 32px;
+        padding: 1rem;
+    }
+
+    .navbar {
+        flex-direction: column; /* Stacks logo above links */
+        padding: 15px;
+        gap: 10px;
+    }
+
+    .nav-links {
+        justify-content: center; /* Centers links on phone */
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .nav-user {
+        width: 100%; /* Puts username on its own line */
+        text-align: center;
+        margin-bottom: 5px;
+        color: #888; /* Dim it slightly so links stand out */
+    }
+
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-content {
+        flex: 1;
+        flex-direction: column;
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;     
+        justify-content: center; 
+        padding: 20px 16px;
+        max-width: 1100px;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 420px;
+        margin: 0;               
+        padding: 24px 18px;      
+        border-radius: 10px;
+    }
+
+    .form-title {
+        font-size: 1.5rem;
+    }
+
+    .form-group input {
+        font-size: 16px; 
+        padding: 12px;
+    }
+
+    .btn {
+        padding: 12px;
+    }
+
+    .cube-card-actions {
+        display: flex;
+        flex-direction: column; 
+        gap: 8px;
+        width: 100%;
+    }
+
+    .cube-card-actions .btn {
+        width: 100%; /* Buttons fill their grid slot */
+        margin: 0;
+        padding: 12px;;
+    }
+
+    .cube-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        gap: 14px;
+        padding: 10px 0;
+        justify-content: flex-start;
+    }
+
+    .cube-card {
+        width: 100%;
+        max-width: 400px; /* Prevents it from being too wide on tablets */
+    }
+
+}

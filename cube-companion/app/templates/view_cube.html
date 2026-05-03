@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}View Cube - {{ cube.name }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div>
+        <h1>{{ cube.name }}</h1>
+        <p class="dashboard-subtitle">{{ cube.description or 'No description provided.' }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
+        <button type="button" id="editCardsBtn" class="btn btn-secondary" onclick="toggleEditMode()">Edit Cards</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+{% if cards %}
+<div class="card-container">
+    {% for card in cards %}
+    <div class="card" data-card-id="{{ card.id }}" data-name="{{ card.name }}"
+         {% if card.card_faces and card.card_faces|length >= 2 %}
+         data-front-face-image="{{ card.card_faces[0].image_url if card.card_faces[0].image_url else '' }}"
+         data-back-face-image="{{ card.card_faces[1].image_url if card.card_faces[1].image_url else '' }}"
+         {% endif %}>
+        <div class="card-image-container">
+            {% if card.card_faces and card.card_faces|length >= 2 %}
+                <!-- Dual-faced card: use front face image -->
+                {% if card.card_faces[0].image_url %}
+                    <img src="{{ card.card_faces[0].image_url }}" alt="{{ card.name }}" class="card-image">
+                {% else %}
+                    <div class="no-image">No Image Available</div>
+                {% endif %}
+            {% elif card.image_url %}
+                <!-- Single-faced card -->
+                <img src="{{ card.image_url }}" alt="{{ card.name }}" class="card-image">
+            {% else %}
+                <div class="no-image">No Image Available</div>
+            {% endif %}
+            {% if card.card_faces and card.card_faces|length >= 2 %}
+                <button type="button" class="btn-flip-face" title="View other side" aria-label="Switch card face"></button>
+            {% endif %}
+        </div>
+        <div class="card-content">
+            <div class="card-text-container">
+                {% if card.card_faces and card.card_faces|length >= 2 %}
+                    <!-- Double-faced card: display each face -->
+                    {% for face in card.card_faces %}
+                    <div class="card-face">
+                        <div class="card-title">{{ face.name }}</div>
+                        {% if face.mana_cost %}
+                        <div class="card-mana">{{ face.mana_cost }}</div>
+                        {% endif %}
+                        <div class="card-type">{{ face.type_line }}</div>
+                        {% if face.text_box %}
+                        <div class="card-text">{{ face.text_box }}</div>
+                        {% endif %}
+                        {% if face.power and face.toughness %}
+                        <div class="card-pt">{{ face.power }}/{{ face.toughness }}</div>
+                        {% endif %}
+                    </div>
+                    {% if not loop.last %}<hr class="face-separator">{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <!-- Single-faced card -->
+                    <div class="card-title">{{ card.name }}</div>
+                    {% if card.mana_cost %}
+                    <div class="card-mana">{{ card.mana_cost }}</div>
+                    {% endif %}
+                    <div class="card-type">{{ card.type_line }}</div>
+                    {% if card.text_box %}
+                    <div class="card-text">{{ card.text_box }}</div>
+                    {% endif %}
+                    {% if card.power and card.toughness %}
+                    <div class="card-pt">{{ card.power }}/{{ card.toughness }}</div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <button type="button" class="btn-remove-card">Remove from Cube</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No cards in this cube yet.</p>
+    <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
+</div>
+{% endif %}
+
+<script>
+function toggleEditMode() {
+    const btn = document.getElementById('editCardsBtn');
+    const editing = btn.dataset.editing === 'true';
+    btn.dataset.editing = !editing;
+    btn.textContent = editing ? 'Edit Cards' : 'Done Editing';
+    document.querySelectorAll('.btn-remove-card').forEach(b => {
+        b.style.display = editing ? 'none' : 'block';
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Hide remove buttons until edit mode is on
+    document.querySelectorAll('.btn-remove-card').forEach(b => {
+        b.style.display = 'none';
+    });
+
+    const cardContainer = document.querySelector('.card-container');
+    if (!cardContainer) return;
+
+    cardContainer.addEventListener('click', (e) => {
+        // Handle flip button for dual-face cards
+        const flipButton = e.target.closest('.btn-flip-face');
+        if (flipButton) {
+            e.stopPropagation();
+            handleCardFlip(flipButton);
+            return;
+        }
+
+        const removeButton = e.target.closest('.btn-remove-card');
+        if (!removeButton) return;
+
+        const card = removeButton.closest('.card');
+        const cardId = card.dataset.cardId;
+        const cardName = card.dataset.name;
+
+        removeButton.disabled = true;
+        removeButton.innerText = "Removing...";
+
+        fetch(`/cube/{{ cube.id }}/remove`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: parseInt(cardId) })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`${cardName} removed from cube.`);
+                card.remove();
+            } else {
+                showToast(data.error || "Error removing card.");
+                removeButton.disabled = false;
+                removeButton.innerText = "Remove from Cube";
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showToast("Error removing card.");
+            removeButton.disabled = false;
+            removeButton.innerText = "Remove from Cube";
+        });
+    });
+});
+
+function handleCardFlip(flipButton) {
+    const card = flipButton.closest('.card');
+    const img = card.querySelector('.card-image');
+    if (!img) return;
+
+    const isFlipped = flipButton.dataset.flipped === 'true';
+    const frontImage = card.dataset.frontFaceImage;
+    const backImage = card.dataset.backFaceImage;
+
+    if (isFlipped) {
+        // Show front face
+        img.src = frontImage;
+        flipButton.dataset.flipped = 'false';
+    } else {
+        // Show back face
+        img.src = backImage;
+        flipButton.dataset.flipped = 'true';
+    }
+}
+</script>
+
+{% endblock %}
