@@ -22,6 +22,10 @@
 {% endif %}
 
 {% if cards %}
+<div class="grid-size-control">
+    <span class="grid-size-label">Cards per row: <span id="gridColsValue">4</span></span>
+    <input type="range" id="gridSizeSlider" class="grid-size-slider" min="1" max="6" value="4">
+</div>
 <div class="card-container">
     {% for card in cards %}
     <div class="card" 
@@ -158,7 +162,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Grid size control
     const cardContainer = document.querySelector('.card-container');
+    const slider = document.getElementById('gridSizeSlider');
+    const colsLabel = document.getElementById('gridColsValue');
+
+    function setGridCols(cols) {
+        if (cardContainer) cardContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        if (colsLabel) colsLabel.textContent = cols;
+        if (slider) slider.value = cols;
+        localStorage.setItem('cardGridColumns', cols);
+    }
+
+    const savedCols = parseInt(localStorage.getItem('cardGridColumns')) || 4;
+    setGridCols(savedCols);
+
+    if (slider) slider.addEventListener('input', () => setGridCols(parseInt(slider.value)));
+
     if (!cardContainer) return;
 
     cardContainer.addEventListener('click', (e) => {

@@ -319,6 +319,8 @@ a:hover { text-decoration: underline; }
     overflow: hidden;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .card:hover {
@@ -328,13 +330,12 @@ a:hover { text-decoration: underline; }
 
 .card img { width: 100%; display: block; }
 
-.card-content { 
+.card-content {
     padding: 15px;
     display: flex;
     flex-direction: column;
-    /* Set a fixed height for the content area so all cards look identical */
-    height: 300px;
- }
+    flex: 1;
+}
 
 .card-text-container {
     flex-grow: 1;
@@ -893,6 +894,28 @@ a:hover { text-decoration: underline; }
     margin: 10px 0;
 }
 
+/* ── Grid Size Control ── */
+.grid-size-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.grid-size-label {
+    font-size: 0.9rem;
+    color: #8fa1b3;
+    white-space: nowrap;
+}
+
+.grid-size-slider {
+    flex: 1;
+    max-width: 200px;
+    accent-color: #ffd700;
+    cursor: pointer;
+    height: 4px;
+}
+
 /* ── Image Lightbox ── */
 .lightbox {
     display: none;
@@ -1069,13 +1092,11 @@ a:hover { text-decoration: underline; }
 
     /* Card grid */
     .card-container {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 12px;
     }
 
-    .card-content {
-        height: auto;
-        min-height: 180px;
+    .grid-size-slider {
+        max-width: 140px;
     }
 
     /* Modal */
