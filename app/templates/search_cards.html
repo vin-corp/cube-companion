@@ -90,7 +90,7 @@
                     {% endif %}
                 {% endif %}
             </div>
-            {% set db_id = existing.get(card.id) %}
+            {% set db_id = existing.get(card.id) or existing_by_name.get(card.name.lower()) %}
             <button type="button" class="btn-add-card"
                 {% if db_id %}
                 data-state="added"
@@ -105,12 +105,75 @@
 </div>
 {% endif %}
 
+<!-- Image Lightbox -->
+<div id="imageLightbox" class="lightbox" role="dialog" aria-modal="true">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+    <div class="lightbox-body">
+        <img id="lightboxImg" src="" alt="" class="lightbox-img">
+        <button id="lightboxChangeArtBtn" class="btn btn-secondary lightbox-change-art" onclick="lightboxOpenChangeArt()" style="display:none;">Change Art</button>
+    </div>
+</div>
+
+<!-- Change Art Modal -->
+<div id="changeArtModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="document.getElementById('changeArtModal').style.display='none'">&times;</span>
+        <h2>Change Art</h2>
+        <div id="changeArtContent"><p>Loading...</p></div>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+    background-color: #1a1f2b;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #e6e6e6;
+}
+.close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.close:hover { color: #ffd700; }
+.art-option { display: inline-block; margin: 10px; text-align: center; width: 130px; position: relative; }
+.art-option .set-name { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; color: #b0b8c1; margin-top: 5px; }
+.art-option .set-name:hover { white-space: normal; overflow: visible; background-color: #2a2f3d; padding: 5px; border-radius: 4px; }
+.btn-select-art { display: block; width: 100%; margin-top: 8px; padding: 8px 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+.btn-select-art:hover:not(:disabled) { background-color: #2980b9; }
+.btn-select-art:disabled { background-color: #7f8c8d; cursor: not-allowed; }
+.art-image-container { position: relative; display: inline-block; }
+.art-thumb { display: block; width: 100px; height: auto; border: 2px solid transparent; }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const cardContainer = document.querySelector('.card-container');
     if (!cardContainer) return;
 
     cardContainer.addEventListener('click', (e) => {
+        // Handle image enlarge
+        const cardImage = e.target.closest('.card-image');
+        if (cardImage) {
+            e.stopPropagation();
+            const card = cardImage.closest('.card');
+            const addBtn = card.querySelector('.btn-add-card');
+            const dbCardId = (addBtn && addBtn.dataset.state === 'added') ? addBtn.dataset.cardDbId : null;
+            const scryfallId = card.dataset.scryfallId;
+            openLightbox(cardImage.src, cardImage.alt, dbCardId, scryfallId);
+            return;
+        }
+
         // Handle flip button for dual-face cards
         const flipButton = e.target.closest('.btn-flip-face');
         if (flipButton) {
@@ -169,6 +232,147 @@ function handleCardFlip(flipButton) {
         img.src = backImage;
         flipButton.dataset.flipped = 'true';
     }
+}
+
+let lightboxCardId = null;
+let lightboxScryfallId = null;
+
+function openLightbox(src, alt, cardId, scryfallId) {
+    const lb = document.getElementById('imageLightbox');
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxImg').alt = alt || '';
+    lightboxCardId = cardId || null;
+    lightboxScryfallId = scryfallId || null;
+    document.getElementById('lightboxChangeArtBtn').style.display = scryfallId ? 'inline-block' : 'none';
+    lb.classList.add('lightbox-open');
+}
+
+function closeLightbox() {
+    document.getElementById('imageLightbox').classList.remove('lightbox-open');
+}
+
+function lightboxOpenChangeArt() {
+    closeLightbox();
+    openChangeArtModal(lightboxCardId, lightboxScryfallId);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+window.addEventListener('click', e => {
+    if (e.target === document.getElementById('imageLightbox')) closeLightbox();
+    if (e.target === document.getElementById('changeArtModal')) document.getElementById('changeArtModal').style.display = 'none';
+});
+
+document.querySelectorAll('.card-image').forEach(img => { img.style.cursor = 'zoom-in'; });
+
+function openChangeArtModal(cardId, scryfallId) {
+    const modal = document.getElementById('changeArtModal');
+    const modalContent = document.getElementById('changeArtContent');
+    modalContent.innerHTML = '<p>Loading...</p>';
+    modal.style.display = 'block';
+
+    const url = cardId
+        ? `/cube/{{ cube.id }}/card/${cardId}/alternates`
+        : `/cube/{{ cube.id }}/alternates/${scryfallId}`;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            if (data.alternates && data.alternates.length > 0) {
+                let html = '<div id="changeArtOptions">';
+                data.alternates.forEach(alt => {
+                    const isCurrent = alt.id === data.current_scryfall_id;
+                    const hasFaces = Array.isArray(alt.card_faces) && alt.card_faces.length >= 2;
+                    const frontImage = hasFaces ? (alt.card_faces[0].image_uris?.normal || '') : (alt.image_uris?.normal || '');
+                    const backImage = hasFaces ? (alt.card_faces[1].image_uris?.normal || '') : '';
+                    html += `
+                        <div class="art-option" data-front-image="${frontImage}" data-back-image="${backImage}">
+                            <div class="art-image-container">
+                                <img src="${frontImage}" alt="${alt.name}" class="art-thumb">
+                                ${hasFaces ? `<button type="button" class="btn-flip-face modal-flip-button" data-state="front" aria-label="Flip card face"></button>` : ''}
+                            </div>
+                            <div class="set-name" title="${alt.set_name} (${alt.set})">${alt.set_name} (${alt.set})</div>
+                            <button type="button" class="btn-select-art" data-scryfall-id="${alt.id}" ${isCurrent ? 'disabled' : ''}>
+                                ${isCurrent ? 'Current' : 'Select'}
+                            </button>
+                        </div>`;
+                });
+                html += '</div>';
+                modalContent.innerHTML = html;
+
+                document.querySelectorAll('.modal-flip-button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const option = this.closest('.art-option');
+                        const img = option.querySelector('.art-thumb');
+                        const isFront = this.dataset.state === 'front';
+                        img.src = isFront ? (option.dataset.backImage || option.dataset.frontImage) : option.dataset.frontImage;
+                        this.dataset.state = isFront ? 'back' : 'front';
+                    });
+                });
+
+                document.querySelectorAll('.btn-select-art').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const selectedId = this.dataset.scryfallId;
+                        const selectedAlt = data.alternates.find(a => a.id === selectedId);
+                        if (cardId) {
+                            updateCardArtInDb(cardId, selectedId);
+                        } else {
+                            updateCardArtInDom(scryfallId, selectedId, selectedAlt);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.art-thumb').forEach(img => {
+                    img.style.cursor = 'zoom-in';
+                    img.addEventListener('click', function() {
+                        openLightbox(this.src, this.alt, null, null);
+                    });
+                });
+            } else {
+                modalContent.innerHTML = '<p>No alternate versions found.</p>';
+            }
+        })
+        .catch(() => { modalContent.innerHTML = '<p>Error loading alternate arts.</p>'; });
+}
+
+function updateCardArtInDb(cardId, scryfallId) {
+    fetch(`/cube/{{ cube.id }}/card/${cardId}/update_art`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scryfall_id: scryfallId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Art updated successfully!');
+            document.getElementById('changeArtModal').style.display = 'none';
+        } else {
+            showToast(data.error || 'Error updating art.');
+        }
+    })
+    .catch(() => showToast('Error updating art.'));
+}
+
+function updateCardArtInDom(oldScryfallId, newScryfallId, altData) {
+    const cardEl = document.querySelector(`.card[data-scryfall-id="${oldScryfallId}"]`);
+    if (!cardEl) return;
+
+    const hasFaces = Array.isArray(altData.card_faces) && altData.card_faces.length >= 2;
+    const newImageUrl = hasFaces
+        ? (altData.card_faces[0].image_uris?.normal || '')
+        : (altData.image_uris?.normal || '');
+
+    cardEl.dataset.scryfallId = newScryfallId;
+    cardEl.dataset.imageUrl = newImageUrl;
+    if (hasFaces) {
+        cardEl.dataset.frontFaceImage = altData.card_faces[0].image_uris?.normal || '';
+        cardEl.dataset.backFaceImage = altData.card_faces[1].image_uris?.normal || '';
+    }
+
+    const img = cardEl.querySelector('.card-image');
+    if (img) img.src = newImageUrl;
+
+    showToast('Art updated!');
+    document.getElementById('changeArtModal').style.display = 'none';
 }
 
 function performAdd(cardData, buttonElement = null) {

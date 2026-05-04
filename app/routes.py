@@ -92,8 +92,10 @@ def search_cards(cube_id):
 
     # Map scryfall_id -> db card id for cards already in this cube
     existing = {c.scryfall_id: c.id for c in cube.cards if c.scryfall_id}
+    # Fallback: match by name in case a different printing is returned by search
+    existing_by_name = {c.name.lower(): c.id for c in cube.cards if c.scryfall_id}
 
-    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error, existing=existing)
+    return render_template("search_cards.html", cube=cube, cards=cards, query=query, error=error, existing=existing, existing_by_name=existing_by_name)
 
 @main.route('/cube/<int:cube_id>/add', methods=['POST'])
 @login_required
@@ -633,6 +635,35 @@ def get_alternates(cube_id, card_id):
         alternates = []
     
     return jsonify({"alternates": alternates, "current_scryfall_id": card.scryfall_id})
+
+@main.route('/cube/<int:cube_id>/alternates/<scryfall_id>')
+@login_required
+def get_alternates_by_scryfall(cube_id, scryfall_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        response = scryfall_requests.get(f"https://api.scryfall.com/cards/{scryfall_id}")
+        if response.status_code != 200:
+            return jsonify({"alternates": [], "current_scryfall_id": scryfall_id})
+        oracle_id = response.json().get('oracle_id')
+    except Exception:
+        return jsonify({"alternates": [], "current_scryfall_id": scryfall_id})
+
+    if not oracle_id:
+        return jsonify({"alternates": [], "current_scryfall_id": scryfall_id})
+
+    try:
+        response = scryfall_requests.get(
+            "https://api.scryfall.com/cards/search",
+            params={"q": f"oracle_id:{oracle_id}", "unique": "prints"}
+        )
+        alternates = response.json().get("data", []) if response.status_code == 200 else []
+    except Exception:
+        alternates = []
+
+    return jsonify({"alternates": alternates, "current_scryfall_id": scryfall_id})
 
 @main.route('/cube/<int:cube_id>/card/<int:card_id>/update_art', methods=['POST'])
 @login_required
