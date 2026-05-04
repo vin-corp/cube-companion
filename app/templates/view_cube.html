@@ -7,10 +7,19 @@
         <h1>{{ cube.name }}</h1>
         <p class="dashboard-subtitle">{{ cube.description or 'No description provided.' }}</p>
     </div>
-    <div>
-        <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
-        <button type="button" id="editCardsBtn" class="btn btn-secondary" onclick="toggleEditMode()">Edit Cards</button>
-        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <div class="header-actions">
+        <div class="options-menu-wrapper">
+            <button class="btn btn-secondary btn-sm options-menu-btn" id="optionsMenuBtn" aria-label="Options">&#9776;</button>
+            <div class="options-menu-dropdown" id="optionsMenuDropdown">
+                <div class="grid-size-control">
+                    <span class="grid-size-label">Cards per row: <span id="gridColsValue">4</span></span>
+                    <input type="range" id="gridSizeSlider" class="grid-size-slider" min="1" max="6" value="4">
+                </div>
+            </div>
+        </div>
+        <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary btn-sm">Add Cards</a>
+        <button type="button" id="editCardsBtn" class="btn btn-secondary btn-sm" onclick="toggleEditMode()">Edit Cards</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
     </div>
 </div>
 
@@ -18,6 +27,7 @@
 <div class="card-container">
     {% for card in cards %}
     <div class="card" data-card-id="{{ card.id }}" data-name="{{ card.name }}"
+         data-can-change-art="{{ 'true' if card.scryfall_id and not card.custom_card_id else 'false' }}"
          {% if card.card_faces and card.card_faces|length >= 2 %}
          data-front-face-image="{{ card.card_faces[0].image_url if card.card_faces[0].image_url else '' }}"
          data-back-face-image="{{ card.card_faces[1].image_url if card.card_faces[1].image_url else '' }}"
@@ -75,9 +85,6 @@
                     {% endif %}
                 {% endif %}
             </div>
-            {% if card.scryfall_id and not card.custom_card_id %}
-            <button type="button" class="btn-change-art" data-card-id="{{ card.id }}">Change Art</button>
-            {% endif %}
             <button type="button" class="btn-remove-card">Remove from Cube</button>
         </div>
     </div>
@@ -102,6 +109,23 @@ function toggleEditMode() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Grid size control
+    const grid = document.querySelector('.card-container');
+    const slider = document.getElementById('gridSizeSlider');
+    const colsLabel = document.getElementById('gridColsValue');
+
+    function setGridCols(cols) {
+        if (grid) grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        if (colsLabel) colsLabel.textContent = cols;
+        if (slider) slider.value = cols;
+        localStorage.setItem('cardGridColumns', cols);
+    }
+
+    const savedCols = parseInt(localStorage.getItem('cardGridColumns')) || 4;
+    setGridCols(savedCols);
+
+    if (slider) slider.addEventListener('input', () => setGridCols(parseInt(slider.value)));
+
     // Hide remove buttons until edit mode is on
     document.querySelectorAll('.btn-remove-card').forEach(b => {
         b.style.display = 'none';
@@ -116,15 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (flipButton) {
             e.stopPropagation();
             handleCardFlip(flipButton);
-            return;
-        }
-
-        // Handle change art button
-        const changeArtButton = e.target.closest('.btn-change-art');
-        if (changeArtButton) {
-            const card = changeArtButton.closest('.card');
-            const cardId = card.dataset.cardId;
-            openChangeArtModal(cardId);
             return;
         }
 
@@ -246,6 +261,13 @@ function openChangeArtModal(cardId) {
                         updateCardArt(cardId, selectedId);
                     });
                 });
+
+                document.querySelectorAll('.art-thumb').forEach(img => {
+                    img.style.cursor = 'zoom-in';
+                    img.addEventListener('click', function() {
+                        openLightbox(this.src, this.alt, null);
+                    });
+                });
             } else {
                 modalContent.innerHTML = '<p>No alternate versions found.</p>';
             }
@@ -285,14 +307,69 @@ function updateCardArt(cardId, scryfallId) {
     });
 }
 
-// Close modal when clicking outside
-window.onclick = function(event) {
+// Close change-art modal when clicking outside
+window.addEventListener('click', function(event) {
     const modal = document.getElementById('changeArtModal');
-    if (event.target == modal) {
-        modal.style.display = 'none';
+    if (event.target === modal) modal.style.display = 'none';
+    const lightbox = document.getElementById('imageLightbox');
+    if (event.target === lightbox) closeLightbox();
+    const dropdown = document.getElementById('optionsMenuDropdown');
+    const btn = document.getElementById('optionsMenuBtn');
+    if (dropdown && !dropdown.contains(event.target) && event.target !== btn) {
+        dropdown.classList.remove('open');
     }
+});
+
+document.getElementById('optionsMenuBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('optionsMenuDropdown').classList.toggle('open');
+});
+
+// Lightbox
+let lightboxCardId = null;
+
+function openLightbox(src, alt, cardId) {
+    const lb = document.getElementById('imageLightbox');
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxImg').alt = alt || '';
+    lightboxCardId = cardId || null;
+    document.getElementById('lightboxChangeArtBtn').style.display = cardId ? 'inline-block' : 'none';
+    lb.classList.add('lightbox-open');
 }
+
+function closeLightbox() {
+    document.getElementById('imageLightbox').classList.remove('lightbox-open');
+}
+
+function lightboxOpenChangeArt() {
+    closeLightbox();
+    if (lightboxCardId) openChangeArtModal(lightboxCardId);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+});
+
+// Wire up card images
+document.querySelectorAll('.card-image').forEach(img => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const card = this.closest('.card');
+        const cardId = card.dataset.canChangeArt === 'true' ? card.dataset.cardId : null;
+        openLightbox(this.src, this.alt, cardId);
+    });
+});
 </script>
+
+<!-- Image Lightbox -->
+<div id="imageLightbox" class="lightbox" role="dialog" aria-modal="true">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+    <div class="lightbox-body">
+        <img id="lightboxImg" src="" alt="" class="lightbox-img">
+        <button id="lightboxChangeArtBtn" class="btn btn-secondary lightbox-change-art" onclick="lightboxOpenChangeArt()" style="display:none;">Change Art</button>
+    </div>
+</div>
 
 <!-- Change Art Modal -->
 <div id="changeArtModal" class="modal">
