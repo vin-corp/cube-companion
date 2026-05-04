@@ -88,7 +88,7 @@ a:hover { text-decoration: underline; }
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
-    border: none;
+    border: 2px solid transparent;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.1s;
     text-decoration: none;
@@ -105,7 +105,7 @@ a:hover { text-decoration: underline; }
 .btn-secondary {
     background-color: transparent;
     color: #ffd700;
-    border: 2px solid #ffd700;
+    border-color: #ffd700;
 }
 
 .btn-full { width: 100%; text-align: center; }
@@ -289,7 +289,6 @@ a:hover { text-decoration: underline; }
 .btn-danger {
     background-color: #c0392b;
     color: #fff;
-    border: none;
 }
 
 .btn-danger:hover { opacity: 0.88; }
@@ -894,12 +893,46 @@ a:hover { text-decoration: underline; }
     margin: 10px 0;
 }
 
+/* ── Header Actions ── */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Options Menu ── */
+.options-menu-wrapper {
+    position: relative;
+}
+
+.options-menu-btn {
+    padding: 7px 12px;
+}
+
+.options-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #1a1f2b;
+    border: 1px solid #2a2f3d;
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 500;
+    min-width: 220px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
+.options-menu-dropdown.open {
+    display: block;
+}
+
 /* ── Grid Size Control ── */
 .grid-size-control {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
 }
 
 .grid-size-label {
@@ -910,7 +943,6 @@ a:hover { text-decoration: underline; }
 
 .grid-size-slider {
     flex: 1;
-    max-width: 200px;
     accent-color: #ffd700;
     cursor: pointer;
     height: 4px;
@@ -1095,8 +1127,9 @@ a:hover { text-decoration: underline; }
         gap: 12px;
     }
 
-    .grid-size-slider {
-        max-width: 140px;
+    .options-menu-dropdown {
+        right: auto;
+        left: 0;
     }
 
     /* Modal */

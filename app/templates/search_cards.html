@@ -7,7 +7,19 @@
         <h1>Search Cards</h1>
         <p class="dashboard-subtitle">Adding to: {{ cube.name }}</p>
     </div>
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <div class="header-actions">
+        <div class="options-menu-wrapper">
+            <button class="btn btn-secondary btn-sm options-menu-btn" id="optionsMenuBtn" aria-label="Options">&#9776;</button>
+            <div class="options-menu-dropdown" id="optionsMenuDropdown">
+                <div class="grid-size-control">
+                    <span class="grid-size-label">Cards per row: <span id="gridColsValue">4</span></span>
+                    <input type="range" id="gridSizeSlider" class="grid-size-slider" min="1" max="6" value="4">
+                </div>
+            </div>
+        </div>
+        <a href="{{ url_for('main.view_cube', cube_id=cube.id) }}" class="btn btn-primary btn-sm">Back to Cube</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
+    </div>
 </div>
 
 <form method="POST" class="auth-form">
@@ -22,10 +34,6 @@
 {% endif %}
 
 {% if cards %}
-<div class="grid-size-control">
-    <span class="grid-size-label">Cards per row: <span id="gridColsValue">4</span></span>
-    <input type="range" id="gridSizeSlider" class="grid-size-slider" min="1" max="6" value="4">
-</div>
 <div class="card-container">
     {% for card in cards %}
     <div class="card" 
@@ -280,6 +288,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbo
 window.addEventListener('click', e => {
     if (e.target === document.getElementById('imageLightbox')) closeLightbox();
     if (e.target === document.getElementById('changeArtModal')) document.getElementById('changeArtModal').style.display = 'none';
+    const dropdown = document.getElementById('optionsMenuDropdown');
+    const btn = document.getElementById('optionsMenuBtn');
+    if (dropdown && !dropdown.contains(e.target) && e.target !== btn) {
+        dropdown.classList.remove('open');
+    }
+});
+
+document.getElementById('optionsMenuBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('optionsMenuDropdown').classList.toggle('open');
 });
 
 document.querySelectorAll('.card-image').forEach(img => { img.style.cursor = 'zoom-in'; });

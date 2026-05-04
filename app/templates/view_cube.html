@@ -7,18 +7,23 @@
         <h1>{{ cube.name }}</h1>
         <p class="dashboard-subtitle">{{ cube.description or 'No description provided.' }}</p>
     </div>
-    <div>
-        <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary">Add Cards</a>
-        <button type="button" id="editCardsBtn" class="btn btn-secondary" onclick="toggleEditMode()">Edit Cards</button>
-        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <div class="header-actions">
+        <div class="options-menu-wrapper">
+            <button class="btn btn-secondary btn-sm options-menu-btn" id="optionsMenuBtn" aria-label="Options">&#9776;</button>
+            <div class="options-menu-dropdown" id="optionsMenuDropdown">
+                <div class="grid-size-control">
+                    <span class="grid-size-label">Cards per row: <span id="gridColsValue">4</span></span>
+                    <input type="range" id="gridSizeSlider" class="grid-size-slider" min="1" max="6" value="4">
+                </div>
+            </div>
+        </div>
+        <a href="{{ url_for('main.search_cards', cube_id=cube.id) }}" class="btn btn-primary btn-sm">Add Cards</a>
+        <button type="button" id="editCardsBtn" class="btn btn-secondary btn-sm" onclick="toggleEditMode()">Edit Cards</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-sm">Back to Dashboard</a>
     </div>
 </div>
 
 {% if cards %}
-<div class="grid-size-control">
-    <span class="grid-size-label">Cards per row: <span id="gridColsValue">4</span></span>
-    <input type="range" id="gridSizeSlider" class="grid-size-slider" min="1" max="6" value="4">
-</div>
 <div class="card-container">
     {% for card in cards %}
     <div class="card" data-card-id="{{ card.id }}" data-name="{{ card.name }}"
@@ -305,13 +310,19 @@ function updateCardArt(cardId, scryfallId) {
 // Close change-art modal when clicking outside
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('changeArtModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
+    if (event.target === modal) modal.style.display = 'none';
     const lightbox = document.getElementById('imageLightbox');
-    if (event.target === lightbox) {
-        closeLightbox();
+    if (event.target === lightbox) closeLightbox();
+    const dropdown = document.getElementById('optionsMenuDropdown');
+    const btn = document.getElementById('optionsMenuBtn');
+    if (dropdown && !dropdown.contains(event.target) && event.target !== btn) {
+        dropdown.classList.remove('open');
     }
+});
+
+document.getElementById('optionsMenuBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    document.getElementById('optionsMenuDropdown').classList.toggle('open');
 });
 
 // Lightbox
