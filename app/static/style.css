@@ -617,6 +617,71 @@ a:hover { text-decoration: underline; }
     transform: none;
 }
 
+.btn-change-art {
+    flex-shrink: 0;
+    margin-top: auto;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.btn-change-art:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+.btn-change-art:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── Dual-face card flip button ── */
+.card-image-container {
+    position: relative;
+    overflow: hidden;
+}
+.btn-flip-face {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.65);
+    border: 2px solid #ffd700;
+    border-radius: 50%;
+    color: #ffd700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+    padding: 0;
+    font-size: 16px;
+}
+.btn-flip-face::before {
+    content: '⇄';
+    display: block;
+}
+.btn-flip-face:hover {
+    background-color: rgba(0, 0, 0, 0.85);
+    transform: scale(1.15);
+}
+.btn-flip-face:active {
+    transform: scale(0.95);
+}
+
+.btn-flip-face[data-flipped="true"] {
+    opacity: 0.7;
+}
+
 .mana-symbol {
     width: 16px;
     height: 16px;
@@ -663,11 +728,6 @@ a:hover { text-decoration: underline; }
     100% { opacity: 0; }
 }
 
-/* ── Dual-face card flip button ── */
-.card-image-container {
-    position: relative;
-    overflow: hidden;
-}
 .search-bar-container input {
     flex-grow: 1;
     background: #fffde7; /* Matches the pale yellow input in mockup */
@@ -691,25 +751,6 @@ a:hover { text-decoration: underline; }
     font-size: 1.2rem;
     font-weight: bold;
 }
-.btn-flip-face {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 36px;
-    height: 36px;
-    background-color: rgba(0, 0, 0, 0.65);
-    border: 2px solid #ffd700;
-    border-radius: 50%;
-    color: #ffd700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    z-index: 10;
-    padding: 0;
-    font-size: 16px;
-}
 /* Card Content Area */
 .list-card-body {
     flex-grow: 1;
@@ -717,15 +758,7 @@ a:hover { text-decoration: underline; }
     flex-direction: column;
     min-width: 0; /* Prevents flex blowout */
 }
-.btn-flip-face::before {
-    content: '⇄';
-    display: block;
-}
 
-.btn-flip-face:hover {
-    background-color: rgba(0, 0, 0, 0.85);
-    transform: scale(1.15);
-}
 .list-card-header {
     display: flex;
     justify-content: space-between;
@@ -836,14 +869,6 @@ a:hover { text-decoration: underline; }
     .cube-enrollment-list-item:last-child {
         border-bottom: none;
     }
-.btn-flip-face:active {
-    transform: scale(0.95);
-}
-
-.btn-flip-face[data-flipped="true"] {
-    opacity: 0.7;
-}
-
 /* ── Card Faces ── */
 .card-pt {
     font-size: 0.9rem;

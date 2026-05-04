@@ -545,3 +545,133 @@ def update_card_cubes(card_id):
         flash("Cube enrollment successfully changed.", "success")
 
     return redirect(url_for('main.my_cards'))
+
+@main.route('/cube/<int:cube_id>/card/<int:card_id>/change_art', methods=['GET', 'POST'])
+@login_required
+def change_art(cube_id, card_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        abort(403)
+    
+    card = Card.query.get_or_404(card_id)
+    if card.cube_id != cube_id or not card.scryfall_id:
+        abort(404)
+    
+    if request.method == 'POST':
+        new_image_url = request.form.get('image_url')
+        if new_image_url:
+            card.image_url = new_image_url
+            db.session.commit()
+            flash(f"Art for {card.name} updated successfully!", "success")
+            return redirect(url_for('main.view_cube', cube_id=cube_id))
+    
+    # Fetch the card's oracle_id from Scryfall
+    try:
+        response = scryfall_requests.get(f"https://api.scryfall.com/cards/{card.scryfall_id}")
+        if response.status_code == 200:
+            card_data = response.json()
+            oracle_id = card_data.get('oracle_id')
+        else:
+            oracle_id = None
+    except Exception:
+        oracle_id = None
+    
+    if not oracle_id:
+        alternate_cards = []
+    else:
+        # Fetch alternate versions
+        try:
+            response = scryfall_requests.get(
+                "https://api.scryfall.com/cards/search",
+                params={"q": f"oracle_id:{oracle_id}", "unique": "prints"}
+            )
+            if response.status_code == 200:
+                alternate_cards = response.json().get("data", [])
+            else:
+                alternate_cards = []
+        except Exception:
+            alternate_cards = []
+    
+    return render_template('change_art.html', cube=cube, card=card, alternate_cards=alternate_cards)
+
+@main.route('/cube/<int:cube_id>/card/<int:card_id>/alternates')
+@login_required
+def get_alternates(cube_id, card_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    card = Card.query.get_or_404(card_id)
+    if card.cube_id != cube_id or not card.scryfall_id:
+        return jsonify({"error": "Card not found"}), 404
+    
+    # Fetch the card's oracle_id from Scryfall
+    try:
+        response = scryfall_requests.get(f"https://api.scryfall.com/cards/{card.scryfall_id}")
+        if response.status_code == 200:
+            card_data = response.json()
+            oracle_id = card_data.get('oracle_id')
+        else:
+            return jsonify({"alternates": [], "current_scryfall_id": card.scryfall_id})
+    except Exception:
+        return jsonify({"alternates": [], "current_scryfall_id": card.scryfall_id})
+    
+    if not oracle_id:
+        return jsonify({"alternates": [], "current_scryfall_id": card.scryfall_id})
+    
+    # Fetch alternate versions
+    try:
+        response = scryfall_requests.get(
+            "https://api.scryfall.com/cards/search",
+            params={"q": f"oracle_id:{oracle_id}", "unique": "prints"}
+        )
+        if response.status_code == 200:
+            alternates = response.json().get("data", [])
+        else:
+            alternates = []
+    except Exception:
+        alternates = []
+    
+    return jsonify({"alternates": alternates, "current_scryfall_id": card.scryfall_id})
+
+@main.route('/cube/<int:cube_id>/card/<int:card_id>/update_art', methods=['POST'])
+@login_required
+def update_art(cube_id, card_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    card = Card.query.get_or_404(card_id)
+    if card.cube_id != cube_id or not card.scryfall_id:
+        return jsonify({"error": "Card not found"}), 404
+    
+    data = request.get_json()
+    new_scryfall_id = data.get('scryfall_id')
+    if not new_scryfall_id:
+        return jsonify({"error": "No scryfall_id provided"}), 400
+    
+    # Fetch the new card data
+    try:
+        response = scryfall_requests.get(f"https://api.scryfall.com/cards/{new_scryfall_id}")
+        if response.status_code == 200:
+            new_card_data = response.json()
+            new_image_url = new_card_data.get('image_uris', {}).get('normal')
+            if new_image_url:
+                card.scryfall_id = new_scryfall_id
+                card.image_url = new_image_url
+                # Update other fields if needed
+                card.name = new_card_data.get('name', card.name)
+                card.mana_cost = new_card_data.get('mana_cost', card.mana_cost)
+                card.type_line = new_card_data.get('type_line', card.type_line)
+                card.text_box = new_card_data.get('oracle_text', card.text_box)
+                card.power = new_card_data.get('power', card.power)
+                card.toughness = new_card_data.get('toughness', card.toughness)
+                card.layout = new_card_data.get('layout', card.layout)
+                db.session.commit()
+                return jsonify({"success": True, "new_image_url": new_image_url})
+            else:
+                return jsonify({"error": "No image URL found for the selected card"}), 400
+        else:
+            return jsonify({"error": "Failed to fetch card data"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
