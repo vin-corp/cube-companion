@@ -1157,4 +1157,102 @@ a:hover { text-decoration: underline; }
         padding: 8px 12px;
         font-size: 0.85rem;
     }
+
+    .custom-cards-wrapper {
+        gap: 12px;
+    }
+
+    .search-bar-container {
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .search-bar-container input {
+        width: 100%;
+    }
+
+    .btn-green-search {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .list-card {
+        flex-direction: column;
+    }
+
+    .list-card-img {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .list-card-img img {
+        max-width: 220px;
+        height: auto;
+        border-radius: 8px;
+    }
+
+    .list-card-header {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .list-card-title {
+        font-size: 1.3rem;
+    }
+
+    .list-card-mana {
+        font-size: 1.1rem;
+    }
+
+    .list-card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .list-card-cubes {
+        max-width: 100%;
+    }
+
+    .list-card-actions {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .list-card-actions .btn,
+    .list-card-actions button,
+    .list-card-actions form {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        text-align: center;
+    }
+
+    .card-entry-layout {
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .card-uploader-outline {
+        width: 260px;
+        height: 364px;
+    }
+
+    .card-form-container {
+        width: 100%;
+        padding: 20px 14px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .btn-green-upload {
+        font-size: 1rem;
+        min-height: 48px;
+    }
 }
