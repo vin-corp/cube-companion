@@ -44,6 +44,8 @@
          data-mana-cost="{{ card.mana_cost or '' }}"
          data-type-line="{{ card.type_line or '' }}"
          data-text-box="{{ card.oracle_text or '' }}"
+         data-power="{{ card.power or '' }}"
+         data-toughness="{{ card.toughness or '' }}"
          data-card-faces='{{ card.card_faces | tojson if card.card_faces else "[]" }}'
          {% if card.layout in ['modal_dfc', 'transform'] and card.card_faces %}
          data-front-face-image="{{ card.card_faces[0].image_uris.normal if card.card_faces[0].image_uris else '' }}"
@@ -222,7 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
             layout: card.dataset.layout,
             mana_cost: card.dataset.manaCost,
             type_line: card.dataset.typeLine,
-            text_box: card.dataset.textBox
+            text_box: card.dataset.textBox,
+            power: card.dataset.power,
+            toughness: card.dataset.toughness
         };
 
         const cardFacesData = card.dataset.cardFaces;
