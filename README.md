@@ -8,7 +8,7 @@ Furthermore users can share any cubes or custom cards they create allowing authe
 
 ---
 
-# Technologies, Frameworkds, and Dependencies
+# Technologies, Frameworks, and Dependencies
 
 ## Backend
 - Python 3.12 - primary language
@@ -161,7 +161,7 @@ On first launch this automatically creates all required database tables. You sho
 
 ---
 
-## Step 7 —- Open the App
+## Step 7 - Open the App
 
 Navigate to `http://127.0.0.1:5000` in your browser.
 
