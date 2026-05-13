@@ -42,7 +42,11 @@
                 {% endif %}
             {% elif card.image_url %}
                 <!-- Single-faced card -->
-                <img src="{{ card.image_url }}" alt="{{ card.name }}" class="card-image">
+                {% if card.image_url.startswith('http') %}
+                    <img src="{{ card.image_url }}" alt="{{ card.name }}" class="card-image">
+                {% else %}
+                    <img src="{{ url_for('static', filename=card.image_url) }}" alt="{{ card.name }}" class="card-image">
+                {% endif %}
             {% else %}
                 <div class="no-image">No Image Available</div>
             {% endif %}

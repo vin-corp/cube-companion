@@ -481,12 +481,17 @@ def delete_custom_card(card_id):
         return redirect(url_for('main.my_cards')) 
         
     card_name = card.name
-    
+    image_path = card.local_image_path
+
     Card.query.filter_by(custom_card_id=card.id).delete()
-    
     db.session.delete(card)
     db.session.commit()
-    
+
+    if image_path:
+        full_path = os.path.join(current_app.root_path, 'static', image_path)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+
     flash(f"{card_name} deleted from your custom cards.", "success")
     return redirect(url_for('main.my_cards'))
 
@@ -513,6 +518,8 @@ def edit_card(card_id):
                 flash("Can't update card: Image must be a PNG, JPG, GIF, or WEBP file", "error")
                 return redirect(url_for('main.edit_card', card_id=card.id))
 
+            old_image_path = card.local_image_path
+
             upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
             os.makedirs(upload_dir, exist_ok=True)
 
@@ -522,7 +529,13 @@ def edit_card(card_id):
             filepath = os.path.join(upload_dir, unique_filename)
 
             image.save(filepath)
-            card.local_image_path = f"uploads/{unique_filename}"
+            new_image_path = f"uploads/{unique_filename}"
+            card.local_image_path = new_image_path
+
+            if old_image_path and old_image_path != new_image_path:
+                old_full_path = os.path.join(current_app.root_path, 'static', old_image_path)
+                if os.path.exists(old_full_path):
+                    os.remove(old_full_path)
             
         db.session.commit()
         flash(f"{card.name} updated successfully!", "success")
