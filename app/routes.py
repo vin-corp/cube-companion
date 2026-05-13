@@ -10,6 +10,11 @@ import shutil
 
 main = Blueprint("main", __name__)
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def _allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @main.route("/")
 def home():
@@ -154,11 +159,12 @@ def add_to_cube(cube_id):
     }), 200
 
 @main.route('/cube/<int:cube_id>/view', methods=['GET'])
+@login_required
 def view_cube(cube_id):
     cube = Cube.query.get_or_404(cube_id)
-    
+    if cube.user_id != current_user.id:
+        abort(403)
     cards = Card.query.filter_by(cube_id=cube_id).all()
-    
     return render_template('view_cube.html', cube=cube, cards=cards)
 
 @main.route('/cube/<int:cube_id>/remove', methods=['POST'])
@@ -404,7 +410,11 @@ def create_card():
         if not image or image.filename == '':
             flash("Can't upload card: Image cannot be blank", "error")
             return render_template('create_card.html', **form_data)
-            
+
+        if not _allowed_file(image.filename):
+            flash("Can't upload card: Image must be a PNG, JPG, GIF, or WEBP file", "error")
+            return render_template('create_card.html', **form_data)
+
         existing_card = CustomCard.query.filter_by(name=name, user_id=current_user.id).first()
         if existing_card:
             flash("Can't upload card: Card with that name already exists", "error")
@@ -499,14 +509,18 @@ def edit_card(card_id):
         
         image = request.files.get('cardImage')
         if image and image.filename != '':
+            if not _allowed_file(image.filename):
+                flash("Can't update card: Image must be a PNG, JPG, GIF, or WEBP file", "error")
+                return redirect(url_for('main.edit_card', card_id=card.id))
+
             upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
             os.makedirs(upload_dir, exist_ok=True)
-            
+
             original_filename = secure_filename(image.filename)
             _, ext = os.path.splitext(original_filename)
             unique_filename = f"{card.uuid}{ext}"
             filepath = os.path.join(upload_dir, unique_filename)
-            
+
             image.save(filepath)
             card.local_image_path = f"uploads/{unique_filename}"
             
