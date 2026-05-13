@@ -111,13 +111,14 @@ def add_to_cube(cube_id):
     
     safe_name = data.get('name', '').replace('\u2212', '-')
 
+    image_url = data.get('image_url')
     new_card = Card(
-        name=safe_name,               
+        name=safe_name,
         scryfall_id=data.get('scryfall_id'),
-        image_url=data.get('image_url'),
+        image_url=image_url,
         mana_cost=data.get('mana_cost'),
         type_line=data.get('type_line'),
-        text_box=safe_text,            
+        text_box=safe_text,
         cube_id=cube_id,
         layout=data.get('layout'),
         power=data.get('power'),
@@ -129,17 +130,20 @@ def add_to_cube(cube_id):
         for face in faces:
             safe_face_text = face.get('oracle_text', face.get('text_box', '')).replace('\u2212', '-')
             safe_face_name = face.get('name', '').replace('\u2212', '-')
-            image_url = face.get('image_url')
-            if not image_url and face.get('image_uris'):
-                image_url = face.get('image_uris', {}).get('normal')
+            face_image_url = face.get('image_url')
+            if not face_image_url and face.get('image_uris'):
+                face_image_url = face.get('image_uris', {}).get('normal')
             new_card.card_faces.append(CardFace(
                 name=safe_face_name,
                 scryfall_id=face.get('scryfall_id'),
-                image_url=image_url,
+                image_url=face_image_url,
                 mana_cost=face.get('mana_cost'),
                 type_line=face.get('type_line'),
                 text_box=safe_face_text
             ))
+        if not new_card.image_url and new_card.card_faces:
+            new_card.image_url = new_card.card_faces[0].image_url
+
     db.session.add(new_card)
     db.session.commit()
     
@@ -280,7 +284,7 @@ def copy_shared_cube(share_id):
                     new_image_url = new_local_image_path
                     custom_card_map[card.custom_card_id] = new_cc
 
-        db.session.add(Card(
+        new_card = Card(
             name=card.name,
             scryfall_id=card.scryfall_id,
             image_url=new_image_url,
@@ -291,7 +295,24 @@ def copy_shared_cube(share_id):
             toughness=card.toughness,
             custom_card_id=new_custom_card_id,
             cube_id=new_cube.id
-        ))
+        )
+
+        if card.card_faces:
+            for face in card.card_faces:
+                new_card.card_faces.append(CardFace(
+                    name=face.name,
+                    scryfall_id=face.scryfall_id,
+                    image_url=face.image_url,
+                    mana_cost=face.mana_cost,
+                    type_line=face.type_line,
+                    text_box=face.text_box,
+                    power=face.power,
+                    toughness=face.toughness
+                ))
+            if not new_card.image_url and new_card.card_faces:
+                new_card.image_url = new_card.card_faces[0].image_url
+
+        db.session.add(new_card)
 
     db.session.commit()
     flash(f'"{source.name}" has been copied to your collection.', 'success')
@@ -562,7 +583,14 @@ def change_art(cube_id, card_id):
     if request.method == 'POST':
         new_image_url = request.form.get('image_url')
         if new_image_url:
-            card.image_url = new_image_url
+            # For cards with faces, update both front and back face images
+            if card.card_faces and card.card_faces[1].image_url:
+                card.card_faces[0].image_url = new_image_url
+                # For modal_dfc/transform, update back face by replacing /front/ with /back/
+                if card.layout in ['modal_dfc', 'transform'] and len(card.card_faces) > 1:
+                    card.card_faces[1].image_url = new_image_url.replace('/front/', '/back/')
+            else:
+                card.image_url = new_image_url
             db.session.commit()
             flash(f"Art for {card.name} updated successfully!", "success")
             return redirect(url_for('main.view_cube', cube_id=cube_id))
@@ -686,20 +714,50 @@ def update_art(cube_id, card_id):
         response = scryfall_requests.get(f"https://api.scryfall.com/cards/{new_scryfall_id}")
         if response.status_code == 200:
             new_card_data = response.json()
-            new_image_url = new_card_data.get('image_uris', {}).get('normal')
-            if new_image_url:
-                card.scryfall_id = new_scryfall_id
+            
+            # Update basic card fields
+            card.scryfall_id = new_scryfall_id
+            card.name = new_card_data.get('name', card.name)
+            card.layout = new_card_data.get('layout', card.layout)
+            
+            # Handle image URL based on layout
+            new_front_face_image = None
+            new_back_face_image = None
+            if new_card_data.get('card_faces'):
+                # For cards with faces, update the front face image
+                front_face = new_card_data['card_faces'][0]
+                new_front_face_image = front_face.get('image_uris', {}).get('normal')
+                new_image_url = new_front_face_image
+                if card.card_faces and len(card.card_faces) > 0:
+                    card.card_faces[0].image_url = new_front_face_image
+                    card.card_faces[0].name = front_face.get('name', card.card_faces[0].name)
+                    card.card_faces[0].mana_cost = front_face.get('mana_cost', card.card_faces[0].mana_cost)
+                    card.card_faces[0].type_line = front_face.get('type_line', card.card_faces[0].type_line)
+                    card.card_faces[0].text_box = front_face.get('oracle_text', card.card_faces[0].text_box)
+                    if len(new_card_data['card_faces']) > 1:
+                        back_face = new_card_data['card_faces'][1]
+                        new_back_face_image = back_face.get('image_uris', {}).get('normal')
+                        if card.layout in ['modal_dfc', 'transform'] and len(card.card_faces) > 1:
+                            card.card_faces[1].image_url = new_back_face_image or (new_front_face_image and new_front_face_image.replace('/front/', '/back/'))
+                            card.card_faces[1].name = back_face.get('name', card.card_faces[1].name)
+                            card.card_faces[1].mana_cost = back_face.get('mana_cost', card.card_faces[1].mana_cost)
+                            card.card_faces[1].type_line = back_face.get('type_line', card.card_faces[1].type_line)
+                            card.card_faces[1].text_box = back_face.get('oracle_text', card.card_faces[1].text_box)
+                else:
+                    card.image_url = new_front_face_image  # Fallback
+            else:
+                # For other layouts, use the main image
+                new_image_url = new_card_data.get('image_uris', {}).get('normal')
                 card.image_url = new_image_url
-                # Update other fields if needed
-                card.name = new_card_data.get('name', card.name)
-                card.mana_cost = new_card_data.get('mana_cost', card.mana_cost)
-                card.type_line = new_card_data.get('type_line', card.type_line)
-                card.text_box = new_card_data.get('oracle_text', card.text_box)
-                card.power = new_card_data.get('power', card.power)
-                card.toughness = new_card_data.get('toughness', card.toughness)
-                card.layout = new_card_data.get('layout', card.layout)
+            
+            if new_image_url:
                 db.session.commit()
-                return jsonify({"success": True, "new_image_url": new_image_url})
+                return jsonify({
+                    "success": True,
+                    "new_image_url": new_image_url,
+                    "new_front_face_image": new_front_face_image,
+                    "new_back_face_image": new_back_face_image
+                })
             else:
                 return jsonify({"error": "No image URL found for the selected card"}), 400
         else:
