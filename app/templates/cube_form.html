@@ -6,7 +6,7 @@
     <h2 class="form-title">{% if cube %}Edit Cube{% else %}New Cube{% endif %}</h2>
     <p class="form-subtitle">{% if cube %}Update your cube's details{% else %}Create a new cube{% endif %}</p>
     
-    <form method="POST" class="auth-form">
+    <form method="POST" class="auth-form" id="cubeForm">
         <div class="form-group">
             <label for="name">Cube Name</label>
             <input id="name" name="name" type="text" placeholder="e.g. Vintage Cube" value="{{ cube.name if cube else '' }}" required>
@@ -19,7 +19,17 @@
         <button type="submit" class="btn btn-primary btn-full">{% if cube %}Save Changes{% else %}Create Cube{% endif %}</button>
         
         {% if cube %}
-        <button type="button" id="importCobraBtn" class="btn btn-secondary btn-full" style="margin-top: 10px;">Import from Cube Cobra</button>
+        <button type="button" id="importCobraBtn" class="btn btn-secondary btn-full" style="margin-top: 10px;"
+                data-import-url="{{ url_for('main.import_cubecobra', cube_id=cube.id) }}"
+                data-view-url="{{ url_for('main.view_cube', cube_id=cube.id) }}">
+            Import from Cube Cobra
+        </button>
+        {% else %}
+        <button type="button" id="createFromCobraBtn" class="btn btn-secondary btn-full" style="margin-top: 10px;"
+                data-create-url="{{ url_for('main.create_cube') }}">
+            Create from Cube Cobra URL
+        </button>
+        {% endif %}
         
         <div id="importProgressContainer" style="display: none; margin-top: 1.5rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
             <div style="background: #eee; border-radius: 10px; height: 10px; overflow: hidden;">
@@ -27,67 +37,158 @@
             </div>
             <p id="importStatus" class="form-subtitle" style="margin-top: 0.5rem; text-align: center; font-size: 0.9rem;">Starting import...</p>
         </div>
-        {% endif %}
         
         <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-full" style="margin-top: 10px;">Cancel</a>
     </form>
 </div>
 
-{% if cube %}
 <script>
-document.getElementById('importCobraBtn').addEventListener('click', function() {
-    const url = prompt("Enter the Cube Cobra URL (e.g., https://cubecobra.com/cube/list/mycube):");
-    if (!url || url.trim() === "") return;
-
-    const container = document.getElementById('importProgressContainer');
-    const bar = document.getElementById('importProgressBar');
-    const status = document.getElementById('importStatus');
-    const btn = this;
-
-    btn.disabled = true;
-    container.style.display = 'block';
-
-    fetch("{{ url_for('main.import_cubecobra', cube_id=cube.id) }}", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url })
-    }).then(response => {
+// 100% Pure Vanilla JS (No Jinja tags to upset VSCode)
+document.addEventListener("DOMContentLoaded", () => {
+    
+    // Helper function to handle the streaming progress bar
+    async function handleSSEStream(response, redirectUrl) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
+        const bar = document.getElementById('importProgressBar');
+        const status = document.getElementById('importStatus');
 
-        function read() {
-            reader.read().then(({ done, value }) => {
-                if (done) return;
-                
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-                
-                lines.forEach(line => {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.substring(6));
-                            if (data.status === 'progress') {
-                                const percent = (data.current / data.total) * 100;
-                                bar.style.width = percent + '%';
-                                status.innerText = `Importing: ${data.card} (${data.current}/${data.total})`;
-                            } else if (data.status === 'completed') {
-                                status.innerText = "Import complete! Redirecting...";
-                                setTimeout(() => {
-                                    window.location.href = "{{ url_for('main.view_cube', cube_id=cube.id) }}";
-                                }, 1000);
-                            }
-                        } catch(e) { console.error("Error parsing SSE:", e); }
-                    }
-                });
-                read();
-            });
+        async function read() {
+            const { done, value } = await reader.read();
+            if (done) return;
+            
+            const chunk = decoder.decode(value, {stream: true});
+            const lines = chunk.split('\n');
+            
+            for (let line of lines) {
+                if (line.startsWith('data: ')) {
+                    try {
+                        const data = JSON.parse(line.substring(6));
+                        if (data.status === 'progress') {
+                            const percent = (data.current / data.total) * 100;
+                            bar.style.width = percent + '%';
+                            status.innerText = `Importing: ${data.card} (${data.current}/${data.total})`;
+                        } else if (data.status === 'completed') {
+                            status.innerText = "Import complete! Redirecting...";
+                            setTimeout(() => {
+                                window.location.href = redirectUrl;
+                            }, 1000);
+                        }
+                    } catch(e) { console.error("Error parsing SSE:", e); }
+                }
+            }
+            await read();
         }
-        read();
-    }).catch(err => {
-        alert("Error: " + err);
-        btn.disabled = false;
-    });
+        await read();
+    }
+
+    // --- EDIT MODE LOGIC ---
+    const importCobraBtn = document.getElementById('importCobraBtn');
+    if (importCobraBtn) {
+        importCobraBtn.addEventListener('click', async function() {
+            // Read URLs from the HTML data attributes
+            const importUrl = this.getAttribute('data-import-url');
+            const viewUrl = this.getAttribute('data-view-url');
+
+            const url = prompt("Enter the Cube Cobra URL (e.g., https://cubecobra.com/cube/list/mycube):");
+            if (!url || url.trim() === "") return;
+
+            document.getElementById('importProgressContainer').style.display = 'block';
+            this.disabled = true;
+
+            try {
+                const response = await fetch(importUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    alert(errData.error || "Failed to start import.");
+                    this.disabled = false;
+                    return;
+                }
+
+                await handleSSEStream(response, viewUrl);
+            } catch (err) {
+                alert("Error: " + err);
+                this.disabled = false;
+            }
+        });
+    }
+
+    // --- CREATE MODE LOGIC ---
+    const createFromCobraBtn = document.getElementById('createFromCobraBtn');
+    if (createFromCobraBtn) {
+        createFromCobraBtn.addEventListener('click', async function() {
+            const createUrl = this.getAttribute('data-create-url');
+
+            // 1. Verify a name is entered
+            const nameInput = document.getElementById('name').value.trim();
+            if (!nameInput) {
+                alert("Please enter a Cube Name first before importing.");
+                document.getElementById('name').focus();
+                return;
+            }
+            const descriptionInput = document.getElementById('description').value.trim();
+
+            // 2. Prompt for URL
+            const url = prompt("Enter the Cube Cobra URL (e.g., https://cubecobra.com/cube/list/mycube):");
+            if (!url || url.trim() === "") return;
+
+            // 3. UI Setup
+            const container = document.getElementById('importProgressContainer');
+            const status = document.getElementById('importStatus');
+            this.disabled = true;
+            document.querySelector('button[type="submit"]').disabled = true;
+            container.style.display = 'block';
+            status.innerText = "Creating cube...";
+
+            try {
+                // 4. Create the cube silently in the background
+                const createRes = await fetch(createUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nameInput, description: descriptionInput })
+                });
+                
+                const createData = await createRes.json();
+                if (!createRes.ok || !createData.success) {
+                    alert(createData.error || "Failed to create cube.");
+                    this.disabled = false;
+                    document.querySelector('button[type="submit"]').disabled = false;
+                    return;
+                }
+
+                const newCubeId = createData.cube_id;
+                status.innerText = "Starting import...";
+
+                // 5. Start the import process targeting the new cube
+                const importRes = await fetch(`/cube/${newCubeId}/import_cubecobra`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                if (!importRes.ok) {
+                    const errData = await importRes.json();
+                    alert(errData.error || "Failed to start import.");
+                    this.disabled = false;
+                    document.querySelector('button[type="submit"]').disabled = false;
+                    return;
+                }
+
+                // 6. Connect to stream and automatically redirect when finished
+                await handleSSEStream(importRes, `/cube/${newCubeId}/view`);
+
+            } catch (err) {
+                alert("Error: " + err);
+                this.disabled = false;
+                document.querySelector('button[type="submit"]').disabled = false;
+            }
+        });
+    }
 });
 </script>
-{% endif %}
 {% endblock %}

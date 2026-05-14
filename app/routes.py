@@ -30,6 +30,17 @@ def dashboard():
 @login_required
 def create_cube():
     if request.method == "POST":
+        if request.is_json:
+            data = request.get_json()
+            name = data.get("name", "").strip()
+            description = data.get("description", "").strip()
+            if name:
+                cube = Cube(name=name, description=description, user_id=current_user.id)
+                db.session.add(cube)
+                db.session.commit()
+                return jsonify({"success": True, "cube_id": cube.id})
+            return jsonify({"error": "Cube name is required"}), 400
+
         name = request.form["name"].strip()
         description = request.form.get("description", "").strip()
         if name:
