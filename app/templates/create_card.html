@@ -79,14 +79,19 @@
 </form>
 
 <script>
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+
     function previewImage(event) {
         const file = event.target.files[0];
         if (file) {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                event.target.value = '';
+                showToast("Image must be a PNG, JPG, GIF, or WEBP file");
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('imagePreview').src = e.target.result;
-                
-                // Toggle visibility
                 document.getElementById('imagePreview').style.display = 'block';
                 document.getElementById('uploadText').style.display = 'none';
                 document.getElementById('deleteImageLink').style.display = 'block';

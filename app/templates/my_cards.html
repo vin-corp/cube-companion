@@ -45,7 +45,15 @@
                     
                     <div class="list-card-footer">
                         <div class="list-card-cubes">
-                            Part of cubes: Cube 1, Cube 2...
+                            {% set cube_ids = enrolled_cubes.get(card.id, []) %}
+                            {% if cube_ids %}
+                                Part of cubes:
+                                {% for cube in user_cubes if cube.id in cube_ids %}
+                                    {{ cube.name }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                Not part of any cubes
+                            {% endif %}
                         </div>
                         <div class="list-card-actions">
                             <a href="{{ url_for('main.share_card', card_id=card.id) }}" class="btn btn-secondary">Share Card</a>

@@ -34,11 +34,6 @@ def register():
 
 
 
-@auth.route("/users")
-def list_users():
-    users = User.query.all()
-    return "<br>".join([f"{u.id}: {u.username}" for u in users])
-
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
