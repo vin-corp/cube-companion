@@ -9,7 +9,8 @@
     <body>
         <nav class="navbar">
             <a class="nav-brand" href="{{ url_for('main.home') }}">Cube Companion</a>
-            <div class="nav-links">
+            <button class="nav-hamburger" id="navHamburger" aria-label="Toggle menu">&#9776;</button>
+            <div class="nav-links" id="navLinks">
                 {% if current_user.is_authenticated %}
                 <span class="nav-user">{{ current_user.username }}</span>
                 <a href="{{ url_for('main.dashboard') }}">Cube Dashboard</a>
@@ -22,6 +23,11 @@
                 {% endif %}
             </div>
         </nav>
+        <script>
+            document.getElementById('navHamburger').addEventListener('click', function() {
+                document.getElementById('navLinks').classList.toggle('nav-open');
+            });
+        </script>
 
         <main class="main-content">
             {% block content %}{% endblock %}
