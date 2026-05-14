@@ -5,6 +5,7 @@
 <div class="form-container">
     <h2 class="form-title">{% if cube %}Edit Cube{% else %}New Cube{% endif %}</h2>
     <p class="form-subtitle">{% if cube %}Update your cube's details{% else %}Create a new cube{% endif %}</p>
+    
     <form method="POST" class="auth-form">
         <div class="form-group">
             <label for="name">Cube Name</label>
@@ -14,8 +15,79 @@
             <label for="description">Description <span class="label-optional">(optional)</span></label>
             <textarea id="description" name="description" placeholder="Describe your cube...">{{ cube.description if cube else '' }}</textarea>
         </div>
+        
         <button type="submit" class="btn btn-primary btn-full">{% if cube %}Save Changes{% else %}Create Cube{% endif %}</button>
-        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-full">Cancel</a>
+        
+        {% if cube %}
+        <button type="button" id="importCobraBtn" class="btn btn-secondary btn-full" style="margin-top: 10px;">Import from Cube Cobra</button>
+        
+        <div id="importProgressContainer" style="display: none; margin-top: 1.5rem; padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
+            <div style="background: #eee; border-radius: 10px; height: 10px; overflow: hidden;">
+                <div id="importProgressBar" style="background: #3b82f6; width: 0%; height: 100%; transition: width 0.3s;"></div>
+            </div>
+            <p id="importStatus" class="form-subtitle" style="margin-top: 0.5rem; text-align: center; font-size: 0.9rem;">Starting import...</p>
+        </div>
+        {% endif %}
+        
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-full" style="margin-top: 10px;">Cancel</a>
     </form>
 </div>
+
+{% if cube %}
+<script>
+document.getElementById('importCobraBtn').addEventListener('click', function() {
+    const url = prompt("Enter the Cube Cobra URL (e.g., https://cubecobra.com/cube/list/mycube):");
+    if (!url || url.trim() === "") return;
+
+    const container = document.getElementById('importProgressContainer');
+    const bar = document.getElementById('importProgressBar');
+    const status = document.getElementById('importStatus');
+    const btn = this;
+
+    btn.disabled = true;
+    container.style.display = 'block';
+
+    fetch("{{ url_for('main.import_cubecobra', cube_id=cube.id) }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+    }).then(response => {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        function read() {
+            reader.read().then(({ done, value }) => {
+                if (done) return;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+                
+                lines.forEach(line => {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            if (data.status === 'progress') {
+                                const percent = (data.current / data.total) * 100;
+                                bar.style.width = percent + '%';
+                                status.innerText = `Importing: ${data.card} (${data.current}/${data.total})`;
+                            } else if (data.status === 'completed') {
+                                status.innerText = "Import complete! Redirecting...";
+                                setTimeout(() => {
+                                    window.location.href = "{{ url_for('main.view_cube', cube_id=cube.id) }}";
+                                }, 1000);
+                            }
+                        } catch(e) { console.error("Error parsing SSE:", e); }
+                    }
+                });
+                read();
+            });
+        }
+        read();
+    }).catch(err => {
+        alert("Error: " + err);
+        btn.disabled = false;
+    });
+});
+</script>
+{% endif %}
 {% endblock %}
