@@ -7,6 +7,9 @@ from werkzeug.utils import secure_filename
 import uuid
 import os
 import shutil
+import json
+import time
+from flask import Response, stream_with_context
 
 main = Blueprint("main", __name__)
 
@@ -32,6 +35,17 @@ def dashboard():
 @login_required
 def create_cube():
     if request.method == "POST":
+        if request.is_json:
+            data = request.get_json()
+            name = data.get("name", "").strip()
+            description = data.get("description", "").strip()
+            if name:
+                cube = Cube(name=name, description=description, user_id=current_user.id)
+                db.session.add(cube)
+                db.session.commit()
+                return jsonify({"success": True, "cube_id": cube.id})
+            return jsonify({"error": "Cube name is required"}), 400
+
         name = request.form["name"].strip()
         description = request.form.get("description", "").strip()
         if name:
@@ -596,6 +610,86 @@ def update_card_cubes(card_id):
 
     return redirect(url_for('main.my_cards'))
 
+@main.route('/cube/<int:cube_id>/import_cubecobra', methods=['POST'])
+@login_required
+def import_cubecobra(cube_id):
+    cube = Cube.query.get_or_404(cube_id)
+    if cube.user_id != current_user.id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+    url = data.get('url', '').strip()
+    
+    try:
+        cc_id = url.rstrip('/').split('/')[-1].split('?')[0]
+    except Exception:
+        return jsonify({"error": "Invalid Cube Cobra URL"}), 400
+
+    # Fetch using cubejson to get precise Scryfall IDs
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        cc_response = scryfall_requests.get(f"https://cubecobra.com/cube/api/cubejson/{cc_id}", headers=headers)
+        if cc_response.status_code != 200:
+            return jsonify({"error": "Failed to fetch cube from Cube Cobra."}), 400
+        
+        cube_json = cc_response.json()
+        mainboard = cube_json.get('cards', {}).get('mainboard', [])
+    except Exception:
+        return jsonify({"error": "Could not connect to Cube Cobra."}), 500
+
+    total_cards = len(mainboard)
+    if total_cards == 0:
+        return jsonify({"error": "The cube list came back empty."}), 400
+
+    # NOTE: The line to clear old cards has been removed as requested.
+
+    def generate():
+        yield f"data: {json.dumps({'status': 'started', 'total': total_cards})}\n\n"
+        
+        for i, card_entry in enumerate(mainboard, 1):
+            # Extract the Scryfall ID provided by Cube Cobra
+            scryfall_id = card_entry.get('details', {}).get('scryfall_id') or card_entry.get('cardID')
+            card_name = card_entry.get('details', {}).get('name', 'Unknown Card')
+
+            try:
+                # Fetch exact card data from Scryfall using the ID
+                sf_res = scryfall_requests.get(f"https://api.scryfall.com/cards/{scryfall_id}")
+                
+                if sf_res.status_code == 200:
+                    card_data = sf_res.json()
+                    
+                    # Image and text sanitization
+                    image_url = ''
+                    if 'image_uris' in card_data:
+                        image_url = card_data['image_uris'].get('normal', '')
+                    elif 'card_faces' in card_data and 'image_uris' in card_data['card_faces'][0]:
+                        image_url = card_data['card_faces'][0]['image_uris'].get('normal', '')
+
+                    new_card = Card(
+                        name=card_data.get('name', '').replace('\u2212', '-'),               
+                        scryfall_id=card_data.get('id'),
+                        image_url=image_url,
+                        mana_cost=card_data.get('mana_cost') or '',
+                        type_line=card_data.get('type_line') or '',
+                        text_box=(card_data.get('oracle_text') or '').replace('\u2212', '-'),
+                        power=card_data.get('power') or '',
+                        toughness=card_data.get('toughness') or '',
+                        cube_id=cube.id
+                    )
+                    
+                    db.session.add(new_card)
+                    db.session.commit()
+                
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error importing {card_name}: {e}")
+                
+            yield f"data: {json.dumps({'status': 'progress', 'current': i, 'total': total_cards, 'card': card_name})}\n\n"
+            time.sleep(0.075) # Polite delay for Scryfall
+            
+        yield f"data: {json.dumps({'status': 'completed'})}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
 @main.route('/cube/<int:cube_id>/card/<int:card_id>/change_art', methods=['GET', 'POST'])
 @login_required
 def change_art(cube_id, card_id):
